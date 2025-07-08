@@ -1,5 +1,8 @@
 package com.project.cryptography;
 
+import com.project.nut00.BlindSignature;
+import com.project.nut00.Proof;
+import com.project.nut12.DLEQ;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.math.ec.custom.sec.SecP256K1Curve;
 import org.bouncycastle.util.encoders.Hex;
@@ -15,45 +18,10 @@ import java.util.Arrays;
 public class Cashu {
     private static final byte[] DOMAIN_SEPARATOR = "Secp256k1_HashToCurve_Cashu_".getBytes(StandardCharsets.UTF_8);
     private static final SecP256K1Curve CURVE = new SecP256K1Curve();
-    private static final ECPoint GENERATOR = CURVE.createPoint(
-            new BigInteger("55066263022277343669578718895168534326250603453777594175500187360389116729240"),
-            new BigInteger("32670510020758816978083085130507043184471273380659243275938904335757337482424")
-    );
+    private static final ECPoint GENERATOR = ECC.DOMAIN.getG();
     private static final BigInteger CURVE_ORDER = CURVE.getOrder();
 
-    public static class Proof {
-        public final String secret;
-        public final ECPoint C;
-        public final DLEQ dleq;
 
-        public Proof(String secret, ECPoint C, DLEQ dleq) {
-            this.secret = secret;
-            this.C = C;
-            this.dleq = dleq;
-        }
-    }
-
-    public static class BlindSignature {
-        public final ECPoint C_;
-        public final DLEQ dleq;
-
-        public BlindSignature(ECPoint C_, DLEQ dleq) {
-            this.C_ = C_;
-            this.dleq = dleq;
-        }
-    }
-
-    public static class DLEQ {
-        public final ECPoint R;
-        public final BigInteger e;
-        public final BigInteger s;
-
-        public DLEQ(ECPoint R, BigInteger e, BigInteger s) {
-            this.R = R;
-            this.e = e;
-            this.s = s;
-        }
-    }
 
     /**
      * Converts a message string to a curve point using hash-to-curve
@@ -113,18 +81,19 @@ public class Cashu {
     }
 
     /**
-     * Computes DLEQ proof (e, s) for blinding
-     */
+     * Computes DLEQ proof (e, s)
+      */
     public static DLEQ computeProof(ECPoint B_, BigInteger a, BigInteger p) {
+        //C_ - rK = kY + krG - krG = kY = C
+        ECPoint C_ = computeC_(B_, a);
         ECPoint r1 = GENERATOR.multiply(p.mod(CURVE_ORDER));
         ECPoint r2 = B_.multiply(p.mod(CURVE_ORDER));
-        ECPoint C_ = computeC_(B_, a);
         ECPoint A = GENERATOR.multiply(a.mod(CURVE_ORDER));
 
         BigInteger e = computeE(r1, r2, A, C_);
         BigInteger s = p.add(a.multiply(e)).mod(CURVE_ORDER);
 
-        return new DLEQ(r1, e, s);
+        return new DLEQ(e, s);
     }
 
     /**
@@ -139,18 +108,18 @@ public class Cashu {
     }
 
     /**
-     * Verifies a proof
+     *  Verifies a proof
      */
     public static boolean verify(Proof proof, ECPoint A) {
-        ECPoint Y = messageToCurve(proof.secret);
-        return verifyProof(Y, proof.dleq.R, proof.C, proof.dleq.e, proof.dleq.s, A);
+        ECPoint Y = proof.secret.toCurve();
+        return verifyProof(Y, proof.dleq.r, proof.c, proof.dleq.e, proof.dleq.s, A);
     }
 
     /**
-     * Verifies a blind signature
+     *   Verifies a blind signature
      */
     public static boolean verify(BlindSignature blindSig, ECPoint A, ECPoint B_) {
-        return verifyProof(B_, blindSig.C_, blindSig.dleq.e, blindSig.dleq.s, A);
+        return verifyProof(B_, blindSig.getC_(), blindSig.dleq.e, blindSig.dleq.s, A);
     }
 
     /**
@@ -172,10 +141,10 @@ public class Cashu {
     /**
      * Verifies DLEQ proof for unblinded signature
      */
-    public static boolean verifyProof(ECPoint Y, ECPoint r, ECPoint C, BigInteger e, BigInteger s, ECPoint A) {
-        ECPoint rA = A.multiply(new BigInteger(1, pointToBytes(r, true)).mod(CURVE_ORDER));
+    public static boolean verifyProof(ECPoint Y, BigInteger r, ECPoint C, BigInteger e, BigInteger s, ECPoint A) {
+        ECPoint rA = A.multiply(r.mod(CURVE_ORDER));
         ECPoint C_ = C.add(rA);
-        ECPoint rG = GENERATOR.multiply(new BigInteger(1, pointToBytes(r, true)).mod(CURVE_ORDER));
+        ECPoint rG = GENERATOR.multiply(r.mod(CURVE_ORDER));
         ECPoint B_ = Y.add(rG);
 
         return verifyProof(B_, C_, e, s, A);
