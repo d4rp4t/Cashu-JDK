@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 
@@ -19,6 +20,12 @@ public class ProofSelector {
     private static final int MAX_OVRAMT = 0;
     private static final int MAX_TIMEMS = 1000;
     private static final int MAX_P2SWAP = 5000;
+
+    private final Optional<Map<String, Integer>> keysetFees;
+
+    public ProofSelector(Optional<Map<String, Integer>> _keysetFees) {
+        keysetFees = _keysetFees;
+    }
 
     // Helper Functions
     private class ProofWithFee {
@@ -34,14 +41,14 @@ public class ProofSelector {
     }
 
     // Calculate delta
-    private static double calculateDelta(double amount, double amountToSend, double feePPK, boolean includeFees) {
+    private double calculateDelta(double amount, double amountToSend, double feePPK, boolean includeFees) {
         double netSum = sumExFees(amount, feePPK, includeFees);
         if (netSum < amountToSend) return Double.POSITIVE_INFINITY; // no good
         return amount + feePPK / 1000 - amountToSend;
     }
 
     // Calculate net amount after fees
-    private static double sumExFees(double amount, double feePPK, boolean includeFees) {
+    private double sumExFees(double amount, double feePPK, boolean includeFees) {
         return amount - (includeFees ? Math.ceil(feePPK / 1000f) : 0);
     }
 
@@ -98,7 +105,7 @@ public class ProofSelector {
         List<ProofWithFee> proofWithFees = new ArrayList<>();
 
         for (Proof p : proofs) {
-            double ppkfee = getProofFeePPK(p);
+            double ppkfee = (includeFees) ? getProofFeePPK(p) : 0;
             double exFee = includeFees ? p.amount - ppkfee / 1000 : p.amount;
             ProofWithFee obj = new ProofWithFee(p, exFee, ppkfee);
             if (!includeFees || exFee > 0) {
@@ -285,9 +292,13 @@ public class ProofSelector {
     }
 
     // Placeholder for the method to get proof fee per key (PPK)
-    private double getProofFeePPK(Proof proof) {
-        // Implement the logic to calculate the proof fee per key (PPK)
-        return 0; // Placeholder return value
+    private double getProofFeePPK(Proof proof)
+    throws NoSuchElementException, ClassCastException, NullPointerException {
+        Integer ppkFee = keysetFees.get().get(proof.keysetId);
+        if (ppkFee == null) {
+            throw new NullPointerException();
+        }
+        return ppkFee;
     }
 
     // Timer class to measure elapsed time
