@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import com.project.nut00.Proof;
+import com.project.errors.CashuExceptions;
 
 public class ProofSelector {
 
@@ -256,7 +257,7 @@ public class ProofSelector {
             // Time limit reached?
             if (timer.elapsed() > MAX_TIMEMS) {
                 if (exactMatch) {
-                    throw new RuntimeException("Proof selection took too long. Try again with a smaller proof set.");
+                    throw new CashuExceptions.ProofSelectionException("Proof selection took too long. Try again with a smaller proof set.");
                 } else {
                     System.out.println("Proof selection took too long. Returning best selection so far.");
                     break;
@@ -302,5 +303,3 @@ public class ProofSelector {
         }
     }
 }
-
-
