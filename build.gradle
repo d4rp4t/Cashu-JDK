@@ -2,7 +2,7 @@ plugins {
     id 'java'
 }
 
-group = 'com.project'
+group = 'com.cashujdk'
 version = '1.0-SNAPSHOT'
 def secpVersion = '0.18.0'
 repositories {
@@ -23,4 +23,9 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+// Task to generate a sources JAR
+java {
+    withSourcesJar()
 }
