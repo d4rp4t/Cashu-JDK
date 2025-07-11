@@ -5,6 +5,7 @@ import com.cashujdk.nut00.StringSecret;
 import com.cashujdk.nut10.Nut10ProofSecret;
 import com.cashujdk.nut10.Nut10Secret;
 import com.cashujdk.nut11.P2PKProofSecret;
+import com.cashujdk.nut14.HTLCProofSecret;
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
@@ -82,7 +83,9 @@ class Nut10SecretDeserializer extends StdDeserializer<Nut10Secret> {
             case P2PKProofSecret.KEY:
                 proofSecret = jsonParser.readValueAs(P2PKProofSecret.class);
                 break;
-            //TODO: ADD HTLC
+            case HTLCProofSecret.KEY:
+                proofSecret = jsonParser.readValueAs(HTLCProofSecret.class);
+                break;
             default:
                 throw new JsonParseException(jsonParser, "Uknown spending conditoin proof");
         }

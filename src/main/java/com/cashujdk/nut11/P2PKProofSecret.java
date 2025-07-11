@@ -24,6 +24,13 @@ import java.util.*;
 public class P2PKProofSecret extends Nut10ProofSecret {
     public static final String KEY = "P2PK";
 
+    public P2PKProofSecret(String nonce, String data, String[][] tags ) {
+        this.setNonce(nonce);
+        this.setData(data);
+        this.setTags(tags);
+    }
+    public P2PKProofSecret() {}
+
     @JsonIgnore
     public P2PkBuilder getBuilder() {
         return P2PkBuilder.load(this);
@@ -107,7 +114,6 @@ public class P2PKProofSecret extends Nut10ProofSecret {
         return witness;
     }
 
-    // Weryfikacja
     public boolean verifyWitness(String message, P2PKWitness witness) {
         byte[] hash = sha256Hash(message.getBytes(StandardCharsets.UTF_8));
         return verifyWitnessHash(hash, witness);

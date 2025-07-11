@@ -40,6 +40,6 @@ public class BlindSignature {
         return Cashu.hexToPoint(c_);
     }
     public void setC_(ECPoint c_) {
-        this.c_ = this.c_ = Cashu.pointToHex(c_, true);
+        this.c_ = Cashu.pointToHex(c_, true);
     }
 }
