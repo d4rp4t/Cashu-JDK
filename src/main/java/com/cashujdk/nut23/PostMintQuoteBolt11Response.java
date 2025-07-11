@@ -1,11 +1,10 @@
-package com.cashujdk.nut21;
+package com.cashujdk.nut23;
 
 import java.math.BigInteger;
 
 import com.cashujdk.nut04.PostMintQuoteResponse;
 
 public class PostMintQuoteBolt11Response extends PostMintQuoteResponse {
-
 
     public BigInteger amount;
     public String state;
