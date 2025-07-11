@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Nut10ProofSecret {
 
+    //Some wallets, like minibits use P2PK secrets with just nonce
+    // instead of StringSecret
     @JsonProperty("nonce")
     private String nonce;
 

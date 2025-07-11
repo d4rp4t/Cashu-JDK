@@ -16,37 +16,22 @@ public class Nut10Secret implements ISecret {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    private String key;
-    private Nut10ProofSecret proofSecret;
+    public String key;
+    public Nut10ProofSecret proofSecret;
 
     @JsonIgnore
-    private final String originalString;
+    private String originalString;
 
     public Nut10Secret(String key, Nut10ProofSecret proofSecret) {
         this.key = key;
         this.proofSecret = proofSecret;
-        this.originalString = null;
     }
 
     public Nut10Secret(String originalString) {
         this.originalString = originalString;
     }
 
-    public String getKey() {
-        return key;
-    }
 
-    public void setKey(String key) {
-        this.key = key;
-    }
-
-    public Nut10ProofSecret getProofSecret() {
-        return proofSecret;
-    }
-
-    public void setProofSecret(Nut10ProofSecret proofSecret) {
-        this.proofSecret = proofSecret;
-    }
 
     public byte[] getBytes() {
         if (originalString != null) {

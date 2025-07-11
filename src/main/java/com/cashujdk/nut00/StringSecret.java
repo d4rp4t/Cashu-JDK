@@ -9,6 +9,10 @@ import java.security.SecureRandom;
 
 public record StringSecret(String secret) implements ISecret {
 
+    public String getSecret() {
+        return this.secret;
+    }
+
     public byte[] getBytes() {
         return secret.getBytes(StandardCharsets.UTF_8);
     }

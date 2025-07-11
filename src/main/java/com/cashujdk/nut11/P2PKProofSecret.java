@@ -144,7 +144,7 @@ public class P2PKProofSecret extends Nut10ProofSecret {
                 for (ECPoint allowedKey : allowedKeys) {
                     if (verifySignature(hash, signature, allowedKey, domainParams)) {
                         validSignatures++;
-                        break; // Jedna sygnatura tylko do jednego klucza
+                        break;
                     }
                 }
             }
