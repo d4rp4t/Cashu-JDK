@@ -1,5 +1,8 @@
 package com.cashujdk.nut07;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class PostCheckStateRequest {
-    public String[] Ys;
+    @JsonProperty("Ys")
+    public String[] ys;
 }

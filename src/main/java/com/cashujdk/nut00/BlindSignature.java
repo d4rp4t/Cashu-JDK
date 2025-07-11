@@ -1,8 +1,9 @@
 package com.cashujdk.nut00;
 
 import com.cashujdk.cryptography.Cashu;
-import com.cashujdk.nut12.DLEQ;
-import com.google.gson.annotations.SerializedName;
+import com.cashujdk.nut12.DLEQProof;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.bouncycastle.math.ec.ECPoint;
 
@@ -11,22 +12,23 @@ import java.math.BigInteger;
 public class BlindSignature {
     public BigInteger amount;
 
-    @SerializedName("id")
+    @JsonProperty("id")
     public String keysetId;
 
-    @SerializedName("C_")
+    @JsonProperty("C_")
     public String c_;
 
-    public DLEQ dleq;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public DLEQProof dleq;
 
     public BlindSignature() {}
-    public BlindSignature(BigInteger amount, String keysetId, String c_, DLEQ dleq) {
+    public BlindSignature(BigInteger amount, String keysetId, String c_, DLEQProof dleq) {
         this.amount = amount;
         this.keysetId = keysetId;
         this.c_ = c_;
         this.dleq = dleq;
     }
-    public BlindSignature(BigInteger amount, String keysetId, ECPoint c_, DLEQ dleq) {
+    public BlindSignature(BigInteger amount, String keysetId, ECPoint c_, DLEQProof dleq) {
         this.amount = amount;
         this.keysetId = keysetId;
         setC_(c_);

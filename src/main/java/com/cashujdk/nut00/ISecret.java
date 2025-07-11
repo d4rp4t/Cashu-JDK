@@ -6,5 +6,4 @@ import org.bouncycastle.math.ec.ECPoint;
 public interface ISecret {
     byte[] getBytes();
     ECPoint toCurve();
-    String toString();
 }

@@ -7,16 +7,7 @@ import com.cashujdk.cryptography.Cashu;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 
-public class StringSecret implements ISecret {
-    private final String secret;
-
-    public StringSecret(String secret) {
-        this.secret = secret;
-    }
-
-    public String getSecret() {
-        return secret;
-    }
+public record StringSecret(String secret) implements ISecret {
 
     public byte[] getBytes() {
         return secret.getBytes(StandardCharsets.UTF_8);
@@ -26,7 +17,7 @@ public class StringSecret implements ISecret {
         return Cashu.hashToCurve(secret.getBytes());
     }
 
-    public static StringSecret random(){
+    public static StringSecret random() {
         byte[] randomBytes = new byte[32];
         new SecureRandom().nextBytes(randomBytes);
 

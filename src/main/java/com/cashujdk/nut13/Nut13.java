@@ -1,5 +1,6 @@
 package com.cashujdk.nut13;
 
+import com.cashujdk.nut00.StringSecret;
 import org.bitcoinj.crypto.ChildNumber;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.HDKeyDerivation;
@@ -15,23 +16,6 @@ public class Nut13 {
     public static final String PURPOSE = "129372'";
     private static final long MOD = (long) Math.pow(2, 31) - 1;
 
-
-    public static class StringSecret {
-        private final String value;
-
-        public StringSecret(String value) {
-            this.value = value;
-        }
-
-        public String getValue() {
-            return value;
-        }
-
-        @Override
-        public String toString() {
-            return value;
-        }
-    }
 
     /**
      * Creates NUT-13 derivation path

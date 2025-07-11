@@ -4,13 +4,12 @@ plugins {
 
 group = 'com.cashujdk'
 version = '1.0-SNAPSHOT'
-def secpVersion = '0.18.0'
+
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation 'com.google.code.gson:gson:2.10'
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     implementation 'org.bitcoinj:bitcoinj-core:0.16.1'
     implementation 'org.bouncycastle:bcprov-jdk15on:1.70'

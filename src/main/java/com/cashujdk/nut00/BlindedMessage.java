@@ -2,7 +2,8 @@ package com.cashujdk.nut00;
 
 
 import com.cashujdk.cryptography.Cashu;
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.bouncycastle.math.ec.ECPoint;
 
@@ -13,12 +14,14 @@ public class BlindedMessage {
     public BigInteger amount;
 
     //keyset id
-    @SerializedName("id")
+    @JsonProperty("id")
     public String keysetId;
 
-    @SerializedName("B_")
+    @JsonProperty("B_")
     public String b_;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public String witness;
 
     public BlindedMessage() {}
 
@@ -26,11 +29,13 @@ public class BlindedMessage {
         this.amount = amount;
         this.b_ = b_;
         this.keysetId = keysetId;
+        this.witness = witness;
     }
-    public BlindedMessage(BigInteger amount, String keysetId, ECPoint b_) {
+    public BlindedMessage(BigInteger amount, String keysetId, ECPoint b_, String witness) {
         this.amount = amount;
         this.keysetId = keysetId;
         setB_(b_);
+        this.witness = witness;
     }
     //getter for B_ as ECPoint
     public ECPoint getB_() {
