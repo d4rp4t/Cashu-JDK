@@ -10,6 +10,7 @@ import com.cashujdk.nut12.DLEQ;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -200,7 +201,10 @@ public class Cashu {
     }
 
     private static byte[] longToBytes(long value) {
-        return ByteBuffer.allocate(Long.BYTES).putLong(value).array();
+        ByteBuffer buffer = ByteBuffer.allocate(4);
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        buffer.putInt((int) value);
+        return buffer.array();
     }
 
     public static String pointToHex(ECPoint point, boolean compressed) {
