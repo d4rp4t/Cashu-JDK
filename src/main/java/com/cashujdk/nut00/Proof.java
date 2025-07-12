@@ -10,7 +10,7 @@ import org.bouncycastle.math.ec.ECPoint;
 import java.math.BigInteger;
 
 public class Proof {
-    public BigInteger amount;
+    public long amount;
 
     @JsonProperty("id")
     public String keysetId;
