@@ -1,12 +1,12 @@
 package com.cashujdk.nut02;
 
-import java.util.Dictionary;
 import java.util.List;
+import java.util.Map;
 
 import com.cashujdk.nut00.Proof;
 
 public class FeeHelper {
-    public static int ComputeFee(List<Proof> proofsToSpend, Dictionary<String, Integer> keysetFees)
+    public static int ComputeFee(List<Proof> proofsToSpend, Map<String, Integer> keysetFees)
     {
         int sum = 0;
 

@@ -7,7 +7,9 @@ import com.cashujdk.cryptography.Cashu;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 
-public record StringSecret(String secret) implements ISecret {
+public class StringSecret implements ISecret {
+
+    private String secret;
 
     public String getSecret() {
         return this.secret;
