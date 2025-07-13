@@ -6,10 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.bouncycastle.jce.interfaces.ECPublicKey;
 import org.bouncycastle.math.ec.ECPoint;
-import org.bouncycastle.util.encoders.UTF8;
-
 import java.nio.charset.StandardCharsets;
 
 public class Nut10Secret implements ISecret {

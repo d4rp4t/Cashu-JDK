@@ -5,7 +5,6 @@ import com.cashujdk.nut00.Proof;
 import com.cashujdk.nut05.PostMeltRequest;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class PostMeltBolt11Request extends PostMeltRequest {
@@ -17,8 +16,7 @@ public class PostMeltBolt11Request extends PostMeltRequest {
         List<Proof> inputs,
         List<BlindedMessage> outputs
     ) {
-        this.quote = quote;
-        this.inputs = inputs;
+        super(quote, inputs);
         this.outputs = outputs;
     }
 }

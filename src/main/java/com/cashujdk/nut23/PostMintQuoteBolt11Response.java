@@ -11,9 +11,7 @@ public class PostMintQuoteBolt11Response extends PostMintQuoteResponse {
     public BigInteger expiry;
 
     public PostMintQuoteBolt11Response(String unit, String quote, String request, BigInteger amount, String state, BigInteger expiry) {
-        this.unit = unit;
-        this.quote = quote;
-        this.request = request;
+        super(quote, request, unit);
         this.amount = amount;
         this.state = state;
         this.expiry = expiry;

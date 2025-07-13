@@ -14,7 +14,6 @@ import java.util.List;
 
 public class Nut13 {
     public static final String PURPOSE = "129372'";
-    private static final long MOD = (long) Math.pow(2, 31) - 1;
 
 
     /**
@@ -41,8 +40,8 @@ public class Nut13 {
         if(keysetId.length() != 16 && keysetId.length() != 8) {
             throw new IllegalArgumentException("Invalid keysetId length: " + keysetId.length());
         }
-        // 2**31-1 is max value of integer
-        BigInteger keysetIdInt = new BigInteger(keysetId ,16).mod(BigInteger.valueOf(Integer.MAX_VALUE));
+        // 2**31-1 is max value of int
+        BigInteger keysetIdInt = new BigInteger(keysetId, 16).mod(BigInteger.valueOf(Integer.MAX_VALUE));
         // since we're doing mod by Integer.MAX_VALUE, max amount of it will be Integer.MAX_VALUE -1
         return keysetIdInt.intValue();
     }

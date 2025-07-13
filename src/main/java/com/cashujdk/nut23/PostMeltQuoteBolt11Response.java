@@ -1,8 +1,6 @@
 package com.cashujdk.nut23;
 
 import com.cashujdk.nut00.BlindSignature;
-import com.cashujdk.nut00.BlindedMessage;
-import com.cashujdk.nut05.PostMeltQuoteRequest;
 import com.cashujdk.nut05.PostMeltQuoteResponse;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -35,13 +33,8 @@ public class PostMeltQuoteBolt11Response extends PostMeltQuoteResponse {
             String paymentPreimage,
             List<BlindSignature> change
     ){
-        this.request = request;
-        this.quote = quote;
-        this.amount = amount;
-        this.unit = unit;
+        super(quote, amount, unit, state, expiry);
         this.feeReserve = feeReserve;
-        this.state = state;
-        this.expiry = expiry;
         this.paymentPreimage = paymentPreimage;
         this.change = change;
     }
