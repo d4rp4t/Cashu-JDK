@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.bouncycastle.math.ec.ECPoint;
 
 import java.math.BigInteger;
+import java.util.Optional;
 
 public class BlindedMessage {
     // there's no ULong in java, so we have to use BigInteger which is a lot slower
@@ -25,17 +26,17 @@ public class BlindedMessage {
 
     public BlindedMessage() {}
 
-    public BlindedMessage(BigInteger amount, String keysetId, String b_, String witness) {
+    public BlindedMessage(BigInteger amount, String keysetId, String b_, Optional<String> witness) {
         this.amount = amount;
         this.b_ = b_;
         this.keysetId = keysetId;
-        this.witness = witness;
+        this.witness = (witness.isPresent()) ? witness.get() : null;
     }
-    public BlindedMessage(BigInteger amount, String keysetId, ECPoint b_, String witness) {
+    public BlindedMessage(BigInteger amount, String keysetId, ECPoint b_, Optional<String> witness) {
         this.amount = amount;
         this.keysetId = keysetId;
         setB_(b_);
-        this.witness = witness;
+        this.witness = (witness.isPresent()) ? witness.get() : null;
     }
     //getter for B_ as ECPoint
     public ECPoint getB_() {
