@@ -27,6 +27,8 @@ public class Proof {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public DLEQProof dleq;
 
+    public Proof() {}
+
     public Proof(long amount, String keysetId, ISecret secret, ECPoint c, Optional<String> witness, Optional<DLEQProof> dleq) {
         this.amount = amount;
         this.keysetId = keysetId;
