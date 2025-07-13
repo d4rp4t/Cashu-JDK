@@ -5,6 +5,8 @@ import com.cashujdk.nut12.DLEQProof;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.Optional;
+
 import org.bouncycastle.math.ec.ECPoint;
 
 public class Proof {
@@ -25,12 +27,12 @@ public class Proof {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public DLEQProof dleq;
 
-    public Proof(long amount, String keysetId, ISecret secret, ECPoint c, String witness, DLEQProof dleq) {
+    public Proof(long amount, String keysetId, ISecret secret, ECPoint c, Optional<String> witness, Optional<DLEQProof> dleq) {
         this.amount = amount;
         this.keysetId = keysetId;
         this.secret = secret;
         this.c = c;
-        this.witness = witness;
-        this.dleq = dleq;
+        this.witness = (witness.isPresent()) ? witness.get() : null;
+        this.dleq = (dleq.isPresent()) ? dleq.get() : null;
     }
 }
