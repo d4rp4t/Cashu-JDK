@@ -7,8 +7,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.bouncycastle.math.ec.ECPoint;
 
-import java.math.BigInteger;
-
 public class Proof {
     public long amount;
 
