@@ -5,7 +5,6 @@ import com.cashujdk.nut05.PostMeltQuoteResponse;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.math.BigInteger;
 import java.util.List;
 
 public class PostMeltQuoteBolt11Response extends PostMeltQuoteResponse {
@@ -13,7 +12,7 @@ public class PostMeltQuoteBolt11Response extends PostMeltQuoteResponse {
     public String request;
 
     @JsonProperty("fee_reserve")
-    public BigInteger feeReserve;
+    public long feeReserve;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonProperty("payment_preimage")
@@ -25,11 +24,11 @@ public class PostMeltQuoteBolt11Response extends PostMeltQuoteResponse {
     PostMeltQuoteBolt11Response(
             String request,
             String quote,
-            BigInteger amount,
+            long amount,
             String unit,
-            BigInteger feeReserve,
+            long feeReserve,
             String state,
-            BigInteger expiry,
+            long expiry,
             String paymentPreimage,
             List<BlindSignature> change
     ){

@@ -5,7 +5,6 @@ import org.bouncycastle.util.encoders.Hex;
 
 import com.cashujdk.cryptography.Cashu;
 
-import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.*;

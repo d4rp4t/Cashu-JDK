@@ -1,15 +1,13 @@
 package com.cashujdk.nut05;
 
-import java.math.BigInteger;
-
 public class PostMeltQuoteResponse {
     public String quote;
-    public BigInteger amount;
+    public long amount;
     public String unit;
     public String state;
-    public BigInteger expiry;
+    public long expiry;
 
-    public PostMeltQuoteResponse(String quote, BigInteger amount, String unit, String state, BigInteger expiry) {
+    public PostMeltQuoteResponse(String quote, long amount, String unit, String state, long expiry) {
         this.quote = quote;
         this.amount = amount;
         this.unit = unit;

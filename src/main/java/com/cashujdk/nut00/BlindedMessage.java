@@ -7,13 +7,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.bouncycastle.math.ec.ECPoint;
 
-import java.math.BigInteger;
 
 public class BlindedMessage {
-    // there's no ULong in java, so we have to use BigInteger which is a lot slower
-    public BigInteger amount;
+    public long amount;
 
-    //keyset id
     @JsonProperty("id")
     public String keysetId;
 
@@ -25,13 +22,13 @@ public class BlindedMessage {
 
     public BlindedMessage() {}
 
-    public BlindedMessage(BigInteger amount, String keysetId, String b_, String witness) {
+    public BlindedMessage(long amount, String keysetId, String b_, String witness) {
         this.amount = amount;
         this.b_ = b_;
         this.keysetId = keysetId;
         this.witness = witness;
     }
-    public BlindedMessage(BigInteger amount, String keysetId, ECPoint b_, String witness) {
+    public BlindedMessage(long amount, String keysetId, ECPoint b_, String witness) {
         this.amount = amount;
         this.keysetId = keysetId;
         setB_(b_);

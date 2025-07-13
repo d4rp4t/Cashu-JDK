@@ -7,10 +7,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.bouncycastle.math.ec.ECPoint;
 
-import java.math.BigInteger;
 
 public class BlindSignature {
-    public BigInteger amount;
+    public long amount;
 
     @JsonProperty("id")
     public String keysetId;
@@ -22,13 +21,13 @@ public class BlindSignature {
     public DLEQProof dleq;
 
     public BlindSignature() {}
-    public BlindSignature(BigInteger amount, String keysetId, String c_, DLEQProof dleq) {
+    public BlindSignature(long amount, String keysetId, String c_, DLEQProof dleq) {
         this.amount = amount;
         this.keysetId = keysetId;
         this.c_ = c_;
         this.dleq = dleq;
     }
-    public BlindSignature(BigInteger amount, String keysetId, ECPoint c_, DLEQProof dleq) {
+    public BlindSignature(long amount, String keysetId, ECPoint c_, DLEQProof dleq) {
         this.amount = amount;
         this.keysetId = keysetId;
         setC_(c_);
