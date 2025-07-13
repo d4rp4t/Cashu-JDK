@@ -2,13 +2,16 @@ package com.cashujdk.nut10;
 
 import com.cashujdk.cryptography.Cashu;
 import com.cashujdk.nut00.ISecret;
+import com.cashujdk.serialization.Nut10SecretDeserializer;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.bouncycastle.math.ec.ECPoint;
 import java.nio.charset.StandardCharsets;
 
+@JsonDeserialize(using = Nut10SecretDeserializer.class)
 public class Nut10Secret implements ISecret {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
