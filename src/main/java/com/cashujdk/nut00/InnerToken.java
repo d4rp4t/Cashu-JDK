@@ -7,4 +7,9 @@ import java.util.List;
 public class InnerToken {
     public String keysetId;
     public List<Proof> proofs;
+
+    public InnerToken(String keysetId, List<Proof> proofs) {
+        this.keysetId = keysetId;
+        this.proofs = proofs;
+    }
 }

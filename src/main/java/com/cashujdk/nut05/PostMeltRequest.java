@@ -7,4 +7,9 @@ import com.cashujdk.nut00.Proof;
 public class PostMeltRequest {
     public String quote;
     public List<Proof> inputs;
+
+    public PostMeltRequest(String quote, List<Proof> inputs) {
+        this.quote = quote;
+        this.inputs = inputs;
+    }
 }
