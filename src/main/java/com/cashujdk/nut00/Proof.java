@@ -7,8 +7,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.bouncycastle.math.ec.ECPoint;
 
-import java.math.BigInteger;
-
 public class Proof {
     public long amount;
 
@@ -26,4 +24,13 @@ public class Proof {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public DLEQProof dleq;
+
+    public Proof(long amount, String keysetId, ISecret secret, ECPoint c, String witness, DLEQProof dleq) {
+        this.amount = amount;
+        this.keysetId = keysetId;
+        this.secret = secret;
+        this.c = c;
+        this.witness = witness;
+        this.dleq = dleq;
+    }
 }

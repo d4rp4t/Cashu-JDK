@@ -7,35 +7,35 @@ import java.util.List;
 import java.util.Map;
 
 public class GetInfoResponse {
-    private String name;
+    public String name;
 
-    private String pubkey;
+    public String pubkey;
 
-    private String version;
+    public String version;
 
-    private String description;
+    public String description;
 
     @JsonProperty("description_long")
-    private String descriptionLong;
+    public String descriptionLong;
 
     @JsonProperty("contact")
-    private List<ContactInfo> contact;
+     List<ContactInfo> contact;
 
-    private String motd;
+    public String motd;
 
     @JsonProperty("icon_url")
-    private String iconUrl;
+    public String iconUrl;
 
-    private String[] urls;
+    public String[] urls;
 
     @JsonProperty("time")
-    private OffsetDateTime time;
+    public OffsetDateTime time;
 
     @JsonProperty("tos_url")
-    private String tosUrl;
+    public String tosUrl;
 
     @JsonProperty("nuts")
-    private Map<String, Object> nuts;
+    public Map<String, Object> nuts;
 }
 
 //todo: add certain nuts settings here

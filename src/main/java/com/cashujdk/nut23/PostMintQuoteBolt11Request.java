@@ -10,7 +10,7 @@ public class PostMintQuoteBolt11Request extends PostMintQuoteRequest {
     public String description;
 
     public PostMintQuoteBolt11Request(String unit, BigInteger amount, String description) {
-        this.unit = unit;
+        super(unit);
         this.amount = amount;
         this.description = description;
     }

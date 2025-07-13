@@ -32,4 +32,7 @@ public record StringSecret(String secret) implements ISecret {
         return new StringSecret(hexString.toString());
     }
 
+    public StringSecret(String secret) {
+        this.secret = secret;
+    }
 }
