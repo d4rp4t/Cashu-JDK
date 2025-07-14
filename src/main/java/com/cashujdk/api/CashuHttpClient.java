@@ -13,22 +13,19 @@ import com.cashujdk.nut09.PostRestoreRequest;
 import com.cashujdk.nut09.PostRestoreResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import okhttp3.*;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 
 public class CashuHttpClient  {
 
-    private final HttpClient httpClient;
+    private final OkHttpClient httpClient;
     private final ObjectMapper objectMapper;
     private final String baseUrl;
 
-    public CashuHttpClient(HttpClient httpClient, String baseUrl) {
+    public CashuHttpClient(OkHttpClient httpClient, String baseUrl) {
         this.httpClient = httpClient;
         this.objectMapper = new ObjectMapper();
         this.baseUrl = baseUrl.endsWith("/") ? baseUrl : baseUrl + "/";
@@ -92,49 +89,59 @@ public class CashuHttpClient  {
 
 
     private <T> CompletableFuture<T> sendGetRequest(String path, Class<T> clazz) {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + path))
-                .GET()
+        Request request = new Request.Builder()
+                .url(baseUrl + path)
+                .get()
                 .build();
 
-        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenApply(response -> handleResponse(response, clazz));
+        return CompletableFuture.supplyAsync(() -> {
+            try (Response response = httpClient.newCall(request).execute()) {
+                return handleResponse(response, clazz);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     private <T> CompletableFuture<T> sendGetRequest(String path, TypeReference<T> typeReference) {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + path))
-                .GET()
+        Request request = new Request.Builder()
+                .url(baseUrl + path)
+                .get()
                 .build();
 
-        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenApply(response -> handleResponse(response, typeReference));
+        return CompletableFuture.supplyAsync(() -> {
+            try (Response response = httpClient.newCall(request).execute()) {
+                return handleResponse(response, typeReference);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     private <TRequest, TResponse> CompletableFuture<TResponse> sendPostRequest(String path, TRequest requestObj, Class<TResponse> clazz) {
-        try {
-            String json = objectMapper.writeValueAsString(requestObj);
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(baseUrl + path))
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
-                    .build();
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                String json = objectMapper.writeValueAsString(requestObj);
+                RequestBody body = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
+                Request request = new Request.Builder()
+                        .url(baseUrl + path)
+                        .post(body)
+                        .build();
 
-            return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                    .thenApply(response -> handleResponse(response, clazz));
-
-        } catch (IOException e) {
-            CompletableFuture<TResponse> failedFuture = new CompletableFuture<>();
-            failedFuture.completeExceptionally(e);
-            return failedFuture;
-        }
+                try (Response response = httpClient.newCall(request).execute()) {
+                    return handleResponse(response, clazz);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     // --- Response handling ---
 
-    private <T> T handleResponse(HttpResponse<String> response, Class<T> clazz) {
-        int statusCode = response.statusCode();
-        String body = response.body();
+    private <T> T handleResponse(Response response, Class<T> clazz) throws IOException {
+        int statusCode = response.code();
+        String body = response.body() != null ? response.body().string() : "";
 
         if (statusCode == 400) {
             try {
@@ -156,9 +163,9 @@ public class CashuHttpClient  {
         }
     }
 
-    private <T> T handleResponse(HttpResponse<String> response, TypeReference<T> typeReference) {
-        int statusCode = response.statusCode();
-        String body = response.body();
+    private <T> T handleResponse(Response response, TypeReference<T> typeReference) throws IOException {
+        int statusCode = response.code();
+        String body = response.body() != null ? response.body().string() : "";
 
         if (statusCode == 400) {
             try {
