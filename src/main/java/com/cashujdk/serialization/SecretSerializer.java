@@ -1,4 +1,4 @@
-package com.cashujdk.json;
+package com.cashujdk.serialization;
 
 import com.cashujdk.nut00.ISecret;
 import com.cashujdk.nut00.StringSecret;
@@ -10,8 +10,8 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 import java.io.IOException;
 
-public class SecretJsonSerializer extends StdSerializer<ISecret> {
-    SecretJsonSerializer() {
+public class SecretSerializer extends StdSerializer<ISecret> {
+    SecretSerializer() {
         super(ISecret.class);
     }
 
