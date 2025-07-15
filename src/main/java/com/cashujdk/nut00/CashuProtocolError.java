@@ -8,4 +8,6 @@ public class CashuProtocolError {
         this.code = code;
         this.detail = detail;
     }
+
+    public CashuProtocolError() {}
 }

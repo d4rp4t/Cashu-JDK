@@ -3,5 +3,7 @@ import java.util.List;
 
 public class GetKeysResponse {
     public List<KeysetItemResponse> keysets;
+
+    public GetKeysResponse() {}
 }
 
