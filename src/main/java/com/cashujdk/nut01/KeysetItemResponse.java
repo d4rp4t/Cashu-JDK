@@ -9,6 +9,8 @@ public class KeysetItemResponse {
     // we keep amount tied to key in BigInteger, since maximum keyset amount is 2^63.
     public Map<BigInteger, String> keys;
 
+    public KeysetItemResponse() {}
+
     public KeysetItemResponse(String id, String unit, Map<BigInteger, String> keys) {
         this.id = id;
         this.unit = unit;

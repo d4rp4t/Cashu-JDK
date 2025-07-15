@@ -296,7 +296,7 @@ public class ProofSelector {
     throws NoSuchElementException, ClassCastException, NullPointerException {
         Integer ppkFee = keysetFees.get().get(proof.keysetId);
         if (ppkFee == null) {
-            throw new NullPointerException();
+            throw new RuntimeException("Cannot get input fee for keyset " + proof.keysetId);
         }
         return ppkFee;
     }
