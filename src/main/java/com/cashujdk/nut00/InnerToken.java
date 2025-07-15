@@ -12,4 +12,7 @@ public class InnerToken {
         this.keysetId = keysetId;
         this.proofs = proofs;
     }
+
+    public InnerToken() {
+    }
 }
