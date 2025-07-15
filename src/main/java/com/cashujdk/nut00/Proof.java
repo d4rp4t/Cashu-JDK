@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Optional;
 
-import org.bouncycastle.math.ec.ECPoint;
 
 public class Proof {
     public long amount;
@@ -19,7 +18,7 @@ public class Proof {
     public ISecret secret;
 
     @JsonProperty("C")
-    public ECPoint c;
+    public String c;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public String witness;
@@ -29,7 +28,7 @@ public class Proof {
 
     public Proof() {}
 
-    public Proof(long amount, String keysetId, ISecret secret, ECPoint c, Optional<String> witness, Optional<DLEQProof> dleq) {
+    public Proof(long amount, String keysetId, ISecret secret, String c, Optional<String> witness, Optional<DLEQProof> dleq) {
         this.amount = amount;
         this.keysetId = keysetId;
         this.secret = secret;

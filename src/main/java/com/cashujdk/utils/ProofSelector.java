@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.cashujdk.errors.CashuExceptions;
 import com.cashujdk.nut00.Proof;
@@ -38,13 +39,24 @@ public class ProofSelector {
             this.exFee = exFee;
             this.ppkfee = ppkfee;
         }
+
+        @Override 
+        public boolean equals(Object obj) {
+            if (!(obj instanceof ProofWithFee)) return false;
+            return this.proof.equals(((ProofWithFee)obj).proof);
+        }
+
+        @Override
+        public int hashCode() {
+            return this.proof.hashCode();
+        }
     }
 
     // Calculate delta
     private double calculateDelta(double amount, double amountToSend, double feePPK, boolean includeFees) {
         double netSum = sumExFees(amount, feePPK, includeFees);
         if (netSum < amountToSend) return Double.POSITIVE_INFINITY; // no good
-        return amount + feePPK / 1000 - amountToSend;
+        return netSum - amountToSend;
     }
 
     // Calculate net amount after fees
@@ -91,6 +103,28 @@ public class ProofSelector {
     }
 
     public Pair<List<Proof>, List<Proof>> selectProofsToSend(List<Proof> proofs, int amountToSend, boolean includeFees) {
+        // Create defensive copy of input list
+        List<Proof> workingProofs = new ArrayList<>(proofs);
+        
+        // If amount to send is invalid, return early
+        if (amountToSend <= 0) {
+            return new Pair<>(workingProofs, new ArrayList<>());
+        }
+        
+        // Separate zero amount proofs from non-zero proofs
+        List<Proof> zeroAmountProofs = workingProofs.stream()
+            .filter(p -> p.amount == 0)
+            .collect(Collectors.toCollection(ArrayList::new));
+            
+        List<Proof> nonZeroProofs = workingProofs.stream()
+            .filter(p -> p.amount > 0)
+            .collect(Collectors.toCollection(ArrayList::new));
+
+        // If no non-zero proofs, return early
+        if (nonZeroProofs.isEmpty()) {
+            return new Pair<>(workingProofs, new ArrayList<>());
+        }
+
         // Init vars
         boolean exactMatch = false; // Allows close match (> amountToSend + fee)
         Timer timer = new Timer(); // Start the clock
@@ -99,31 +133,36 @@ public class ProofSelector {
         double bestAmount = 0;
         double bestFeePPK = 0;
 
-        // Pre-processing
+        // Pre-processing: Convert all non-zero proofs to ProofWithFee objects
+        List<ProofWithFee> proofWithFees = new ArrayList<>();
         double totalAmount = 0;
         double totalFeePPK = 0;
-        List<ProofWithFee> proofWithFees = new ArrayList<>();
 
-        for (Proof p : proofs) {
+        for (Proof p : nonZeroProofs) {
             double ppkfee = (includeFees) ? getProofFeePPK(p) : 0;
-            double exFee = includeFees ? p.amount - ppkfee / 1000 : p.amount;
+            double exFee = includeFees ? (p.amount - ppkfee / 1000.0) : p.amount;
             ProofWithFee obj = new ProofWithFee(p, exFee, ppkfee);
-            if (!includeFees || exFee > 0) {
-                totalAmount += p.amount;
-                totalFeePPK += ppkfee;
-            }
             proofWithFees.add(obj);
+            totalAmount += p.amount;
+            totalFeePPK += ppkfee;
         }
 
-        // Filter uneconomical proofs
-        List<ProofWithFee> spendableProofs = includeFees
-                ? proofWithFees.stream().filter(obj -> obj.exFee > 0).toList()
-                : proofWithFees;
+        // Check if we have enough funds after fees
+        double totalNetSum = sumExFees(totalAmount, totalFeePPK, includeFees);
+        if (amountToSend > totalNetSum) {
+            // Special case: If we have exact amount without fees, but not enough with fees,
+            // try without fees
+            if (includeFees && totalAmount >= amountToSend) {
+                return selectProofsToSend(proofs, amountToSend, false);
+            }
+            return new Pair<>(workingProofs, new ArrayList<>());
+        }
 
-        // Sort by exFee ascending
-        spendableProofs.sort(Comparator.comparingDouble(a -> a.exFee));
+        // Sort proofs by exFee ascending
+        proofWithFees.sort(Comparator.comparingDouble(a -> a.exFee));
 
         // Remove proofs too large to be useful
+        List<ProofWithFee> spendableProofs = new ArrayList<>(proofWithFees);
         if (!spendableProofs.isEmpty()) {
             int endIndex;
             if (exactMatch) {
@@ -140,18 +179,7 @@ public class ProofSelector {
                     endIndex = spendableProofs.size();
                 }
             }
-            // Adjust totals for removed proofs
-            for (int i = endIndex; i < spendableProofs.size(); i++) {
-                totalAmount -= spendableProofs.get(i).proof.amount;
-                totalFeePPK -= spendableProofs.get(i).ppkfee;
-            }
-            spendableProofs = spendableProofs.subList(0, endIndex);
-        }
-
-        // Validate using precomputed totals
-        double totalNetSum = sumExFees(totalAmount, totalFeePPK, includeFees);
-        if (amountToSend <= 0 || amountToSend > totalNetSum) {
-            return new Pair<>(proofs, Collections.emptyList());
+            spendableProofs = new ArrayList<>(spendableProofs.subList(0, endIndex));
         }
 
         // Max acceptable amount for non-exact matches
@@ -190,13 +218,16 @@ public class ProofSelector {
                 }
             }
 
+            // Sort others by exFee for binary search
+            others.sort(Comparator.comparingDouble(a -> a.exFee));
+
             // Generate a random order for accessing the trial subset ('S')
             List<Integer> indices = new ArrayList<>();
             for (int i = 0; i < S.size(); i++) {
                 indices.add(i);
             }
             Collections.shuffle(indices);
-            indices = indices.subList(0, Math.min(MAX_P2SWAP, indices.size()));
+            indices = new ArrayList<>(indices.subList(0, Math.min(MAX_P2SWAP, indices.size())));
 
             for (int i : indices) {
                 double netSum = sumExFees(amount, feePPK, includeFees);
@@ -211,7 +242,7 @@ public class ProofSelector {
                 double tempNetSum = sumExFees(tempAmount, tempFeePPK, includeFees);
                 double target = amountToSend - tempNetSum;
 
-                // Find a better replacement proof (objQ)
+                // Find a better replacement proof (objQ) using binary search
                 int qIndex = binarySearchIndex(others, target, exactMatch);
                 if (qIndex != -1) {
                     ProofWithFee objQ = others.get(qIndex);
@@ -235,6 +266,9 @@ public class ProofSelector {
                 bestDelta = delta;
                 bestAmount = amount;
                 bestFeePPK = feePPK;
+
+                // Found perfect match?
+                if (bestDelta == 0) break;
 
                 // "PHASE 3": Final check to make sure we haven't overpaid fees
                 List<ProofWithFee> tempS = new ArrayList<>(bestSubset); // Copy
@@ -272,26 +306,40 @@ public class ProofSelector {
             }
         }
 
-        // Return Result
+        // If we found a valid solution
         if (bestSubset != null && bestDelta < Double.POSITIVE_INFINITY) {
-            List<Proof> bestProofs = new ArrayList<>();
-            for (ProofWithFee obj : bestSubset) {
-                bestProofs.add(obj.proof);
-            }
-            Set<Proof> bestSubsetSet = new HashSet<>(bestProofs);
-            List<Proof> keep = new ArrayList<>();
-            for (Proof p : proofs) {
-                if (!bestSubsetSet.contains(p)) {
-                    keep.add(p);
+            // Extract selected proofs
+            List<Proof> selectedProofs = bestSubset.stream()
+                .map(pwf -> pwf.proof)
+                .collect(Collectors.toCollection(ArrayList::new));
+
+            // Calculate remaining proofs
+            Set<Proof> selectedSet = new HashSet<>(selectedProofs);
+            List<Proof> remainingProofs = new ArrayList<>();
+            
+            // Add non-selected non-zero proofs
+            for (Proof p : nonZeroProofs) {
+                if (!selectedSet.contains(p)) {
+                    remainingProofs.add(p);
                 }
             }
+            
+            // Add all zero amount proofs
+            remainingProofs.addAll(zeroAmountProofs);
+
             System.out.println("Proof selection took " + timer.elapsed() + "ms");
-            return new Pair<>(keep, bestProofs);
+            return new Pair<>(remainingProofs, selectedProofs);
         }
-        return new Pair<>(proofs, Collections.emptyList());
+
+        // No valid solution found, try without fees if we were using them
+        if (includeFees) {
+            return selectProofsToSend(proofs, amountToSend, false);
+        }
+
+        return new Pair<>(workingProofs, new ArrayList<>());
     }
 
-    // Placeholder for the method to get proof fee per key (PPK)
+    // Get proof fee per key (PPK)
     private double getProofFeePPK(Proof proof)
     throws NoSuchElementException, ClassCastException, NullPointerException {
         Integer ppkFee = keysetFees.get().get(proof.keysetId);

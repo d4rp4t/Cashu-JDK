@@ -89,7 +89,7 @@ public class CBORSerializer {
         CBORObject secretCbor = CBORObject.FromJSONBytes(jsonBytes);
         proofMap.put(CBORObject.FromObject("s"), secretCbor);
 
-        proofMap.put(CBORObject.FromObject("c"), CBORObject.FromObject(proof.c.getEncoded(true)));
+        proofMap.put(CBORObject.FromObject("c"), CBORObject.FromObject(proof.c));
 
         if (proof.dleq != null) {
             proofMap.put(CBORObject.FromObject("d"), createDLEQObject(proof.dleq));

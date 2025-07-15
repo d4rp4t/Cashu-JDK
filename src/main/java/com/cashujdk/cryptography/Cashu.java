@@ -114,7 +114,7 @@ public class Cashu {
      */
     public static boolean verify(Proof proof, ECPoint A) {
         ECPoint Y = proof.secret.toCurve();
-        return verifyProof(Y, proof.dleq.r, proof.c, proof.dleq.e, proof.dleq.s, A);
+        return verifyProof(Y, proof.dleq.r, hexToPoint(proof.c), proof.dleq.e, proof.dleq.s, A);
     }
 
     /**
@@ -258,5 +258,24 @@ public class Cashu {
         }
 
         return bytes;
+    }
+
+    public static String bytesToHex(byte[] bytes) {
+        if (bytes == null) {
+            throw new IllegalArgumentException("Input byte array cannot be null");
+        }
+
+        StringBuilder hexString = new StringBuilder(bytes.length * 2);
+        
+        for (byte b : bytes) {
+            // Convert each byte to a two-digit hexadecimal representation
+            String hex = Integer.toHexString(b & 0xFF);
+            if (hex.length() == 1) {
+                hexString.append('0'); // Append leading zero for single-digit hex
+            }
+            hexString.append(hex);
+        }
+
+        return hexString.toString();
     }
 }

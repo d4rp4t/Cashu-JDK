@@ -13,6 +13,7 @@ import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec;
 import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.util.encoders.Hex;
+import com.cashujdk.cryptography.Cashu;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -86,7 +87,7 @@ public class CBORDeserializer {
 
         // Parse C point
         byte[] cBytes = proofObj.get("c").GetByteString();
-        proof.c = CURVE_PARAMS.getCurve().decodePoint(cBytes);
+        proof.c = Cashu.bytesToHex(cBytes);
 
         // Parse optional DLEQ
         if (proofObj.ContainsKey("d")) {
