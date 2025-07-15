@@ -1,8 +1,7 @@
 package com.cashujdk.nut00;
 
 import com.cashujdk.serialization.CBORSerializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
+import com.cashujdk.serialization.CBORDeserializer;
 
 import java.util.Base64;
 import java.util.List;
@@ -26,9 +25,8 @@ public class Token {
         if (!encoded.startsWith("cashuB")) throw new IllegalArgumentException("invalid token");
         String base64 = encoded.substring(6);
         byte[] cbor = Base64.getUrlDecoder().decode(base64);
-        CBORFactory cborFactory = new CBORFactory();
-        ObjectMapper mapper = new ObjectMapper(cborFactory);
-        return mapper.readValue(cbor, Token.class);
+        var deserializer = new CBORDeserializer();
+        return deserializer.fromCBOR(cbor);
     }
 
 
@@ -55,6 +53,3 @@ public class Token {
 //        return mapper.readValue(cbor, Token.class);
 //    }
 }
-
-
-
