@@ -122,7 +122,7 @@ public class Cashu {
      *   Verifies a blind signature
      */
     public static boolean verify(BlindSignature blindSig, ECPoint A, ECPoint B_) {
-        return verifyProof(B_, blindSig.getC_(), blindSig.dleq.e, blindSig.dleq.s, A);
+        return verifyProof(B_, hexToPoint(blindSig.c_), blindSig.dleq.e, blindSig.dleq.s, A);
     }
 
     /**
