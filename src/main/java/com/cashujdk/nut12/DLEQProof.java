@@ -1,16 +1,28 @@
 package com.cashujdk.nut12;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.math.BigInteger;
+import java.util.Optional;
 
-public class DLEQProof extends DLEQ {
+public class DLEQProof {
 
-    public DLEQProof(BigInteger s, BigInteger e, BigInteger r) {
-        super(s, e);
-        this.r = r;
+    @JsonDeserialize(using = HexBigIntegerDeserializer.class)
+    public BigInteger s;
+
+    @JsonDeserialize(using = HexBigIntegerDeserializer.class)
+    public BigInteger e;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonDeserialize(using = HexBigIntegerDeserializer.class)
+    public BigInteger r; 
+
+    public DLEQProof() {}
+
+    public DLEQProof(BigInteger s, BigInteger e, Optional<BigInteger> r) {
+        this.s = s;
+        this.e = e;
+        this.r = (r.isPresent()) ? r.get() : null;
     }
-
-    @JsonProperty("r")
-    public BigInteger r;
 }

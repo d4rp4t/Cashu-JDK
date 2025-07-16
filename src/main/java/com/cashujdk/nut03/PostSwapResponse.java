@@ -6,4 +6,6 @@ import com.cashujdk.nut00.BlindSignature;
 
 public class PostSwapResponse {
     public List<BlindSignature> signatures;
+
+    public PostSwapResponse() {}
 }

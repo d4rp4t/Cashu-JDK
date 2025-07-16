@@ -2,6 +2,7 @@ package com.cashujdk.nut14;
 
 import com.cashujdk.nut11.P2PKProofSecret;
 import com.cashujdk.nut11.P2PKWitness;
+import com.cashujdk.cryptography.Cashu;
 import com.cashujdk.nut00.BlindedMessage;
 import com.cashujdk.nut00.ISecret;
 import com.cashujdk.nut00.Proof;
@@ -47,7 +48,7 @@ public class HTLCProofSecret extends P2PKProofSecret {
     }
 
     public HTLCWitness generateWitness(BlindedMessage blindedMessage, List<ECPrivateKeyParameters> keys, String preimage) {
-        ECPoint point = blindedMessage.getB_();
+        ECPoint point = Cashu.hexToPoint(blindedMessage.b_);
         byte[] msg = point.getEncoded(false);
         return generateWitness(msg, keys, preimage.getBytes(StandardCharsets.UTF_8));
     }

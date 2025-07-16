@@ -32,14 +32,7 @@ public class BlindedMessage {
     public BlindedMessage(long amount, String keysetId, ECPoint b_, Optional<String> witness) {
         this.amount = amount;
         this.keysetId = keysetId;
-        setB_(b_);
-        this.witness = (witness.isPresent()) ? witness.get() : null;
-    }
-    //getter for B_ as ECPoint
-    public ECPoint getB_() {
-       return Cashu.hexToPoint(b_);
-    }
-    public void setB_(ECPoint b_) {
         this.b_ = Cashu.pointToHex(b_, true);
+        this.witness = (witness.isPresent()) ? witness.get() : null;
     }
 }

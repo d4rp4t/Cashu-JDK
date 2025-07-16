@@ -12,6 +12,7 @@ import com.cashujdk.nut07.PostCheckStateResponse;
 import com.cashujdk.nut09.PostRestoreRequest;
 import com.cashujdk.nut09.PostRestoreResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
 
@@ -27,8 +28,18 @@ public class CashuHttpClient  {
 
     public CashuHttpClient(OkHttpClient httpClient, String baseUrl) {
         this.httpClient = httpClient;
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = createObjectMapper();
         this.baseUrl = baseUrl.endsWith("/") ? baseUrl : baseUrl + "/";
+    }
+
+    private static ObjectMapper createObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        
+        // Configure mapper for better error messages
+        mapper.enable(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY);
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        
+        return mapper;
     }
 
     // --- GET Requests ---
@@ -148,7 +159,10 @@ public class CashuHttpClient  {
                 CashuProtocolError error = objectMapper.readValue(body, CashuProtocolError.class);
                 throw new CashuProtocolException(error);
             } catch (IOException e) {
-                throw new RuntimeException("Error deserializing error response", e);
+                throw new RuntimeException(String.format(
+                    "Error deserializing error response. Response body: '%s', Error: %s",
+                    body, e.getMessage()
+                ), e);
             }
         }
 
@@ -159,7 +173,10 @@ public class CashuHttpClient  {
         try {
             return objectMapper.readValue(body, clazz);
         } catch (IOException e) {
-            throw new RuntimeException("Error deserializing response", e);
+            throw new RuntimeException(String.format(
+                "Error deserializing response to type '%s'. Response body: '%s', Error: %s",
+                clazz.getSimpleName(), body, e.getMessage()
+            ), e);
         }
     }
 
@@ -172,7 +189,10 @@ public class CashuHttpClient  {
                 CashuProtocolError error = objectMapper.readValue(body, CashuProtocolError.class);
                 throw new CashuProtocolException(error);
             } catch (IOException e) {
-                throw new RuntimeException("Error deserializing error response", e);
+                throw new RuntimeException(String.format(
+                    "Error deserializing error response. Response body: '%s', Error: %s",
+                    body, e.getMessage()
+                ), e);
             }
         }
 
@@ -183,7 +203,10 @@ public class CashuHttpClient  {
         try {
             return objectMapper.readValue(body, typeReference);
         } catch (IOException e) {
-            throw new RuntimeException("Error deserializing response", e);
+            throw new RuntimeException(String.format(
+                "Error deserializing response to type '%s'. Response body: '%s', Error: %s",
+                typeReference.getType().getTypeName(), body, e.getMessage()
+            ), e);
         }
     }
 }

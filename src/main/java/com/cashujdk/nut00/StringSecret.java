@@ -1,10 +1,9 @@
 package com.cashujdk.nut00;
 
 import org.bouncycastle.math.ec.ECPoint;
-
+import org.bouncycastle.util.encoders.Hex;
 import com.cashujdk.cryptography.Cashu;
 
-import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 
 public class StringSecret implements ISecret {
@@ -16,25 +15,31 @@ public class StringSecret implements ISecret {
     }
 
     public byte[] getBytes() {
-        return secret.getBytes(StandardCharsets.UTF_8);
+        try {
+            // First try decoding as hex
+            return Hex.decode(secret);
+        } catch (Exception e) {
+            // If not hex, treat as regular string (for backwards compatibility)
+            return secret.getBytes();
+        }
     }
 
     public ECPoint toCurve() {
-        return Cashu.hashToCurve(secret.getBytes());
+        return Cashu.hashToCurve(getBytes());
     }
 
     public static StringSecret random() {
         byte[] randomBytes = new byte[32];
         new SecureRandom().nextBytes(randomBytes);
-
-        StringBuilder hexString = new StringBuilder(64);
-        for (byte b : randomBytes) {
-            hexString.append(String.format("%02x", b));
-        }
-        return new StringSecret(hexString.toString());
+        return new StringSecret(Hex.toHexString(randomBytes));
     }
 
     public StringSecret(String secret) {
         this.secret = secret;
+    }
+
+    @Override
+    public String toString() {
+        return getSecret();
     }
 }

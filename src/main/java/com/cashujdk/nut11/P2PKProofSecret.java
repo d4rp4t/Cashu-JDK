@@ -1,5 +1,6 @@
 package com.cashujdk.nut11;
 
+import com.cashujdk.cryptography.Cashu;
 import com.cashujdk.cryptography.ECC;
 import com.cashujdk.nut00.BlindedMessage;
 import com.cashujdk.nut00.ISecret;
@@ -60,7 +61,7 @@ public class P2PKProofSecret extends Nut10ProofSecret {
     }
 
     public P2PKWitness generateWitness(BlindedMessage message, List<ECPrivateKeyParameters> keys) {
-        ECPoint point = message.getB_();
+        ECPoint point = Cashu.hexToPoint(message.b_);
         byte[] msg = point.getEncoded(false);
         return generateWitness(msg, keys);
     }
