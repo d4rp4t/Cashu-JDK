@@ -25,12 +25,11 @@ public class Token {
      * @param unit The unit for the token (e.g., "sat" or "BTC")
      * @throws IllegalArgumentException if proofs are from different mints
      */
-    public Token(List<Proof> proofs, String mintUrl) {
+    public Token(List<Proof> proofs, String unit, String mintUrl) {
         if (proofs == null || proofs.isEmpty()) {
             throw new IllegalArgumentException("Proofs list cannot be null or empty");
         }
 
-        String unit = proofs.get(0).keysetId;
         if (unit == null || unit.isEmpty()) {
             throw new IllegalArgumentException("Unit cannot be null or empty");
         }
