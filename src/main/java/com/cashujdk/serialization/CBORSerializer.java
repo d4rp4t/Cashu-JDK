@@ -23,6 +23,7 @@ public class CBORSerializer {
 
     public byte[] toCBOR(Token token) {
         try {
+            // Create a map of proofs grouped by keyset ID
             Map<String, List<Proof>> groupedProofs = new LinkedHashMap<>();
             for (InnerToken entry : token.tokens) {
                 for (Proof proof : entry.proofs) {
@@ -30,94 +31,75 @@ public class CBORSerializer {
                 }
             }
 
+            // Create the main token array containing proof sets
             CBORObject tokenSets = CBORObject.NewArray();
 
+            // Create each proof set in the order of keyset IDs
             for (Map.Entry<String, List<Proof>> group : groupedProofs.entrySet()) {
-                CBORObject proofSetItem = createProofSetItem(group.getKey(), group.getValue());
-                tokenSets.Add(proofSetItem);
+                CBORObject proofSet = CBORObject.NewMap();
+                proofSet.Add("i", CBORObject.FromObject(Hex.decode(group.getKey())));
+                
+                // Add proofs array
+                CBORObject proofsArray = CBORObject.NewArray();
+                for (Proof proof : group.getValue()) {
+                    proofsArray.Add(createProofItem(proof));
+                }
+                proofSet.Add("p", proofsArray);
+                
+                tokenSets.Add(proofSet);
             }
 
-            CBORObject cbor = createOrderedCBORObject(tokenSets, token);
+            // Create the main token object with the canonical order of fields
+            CBORObject tokenObj = CBORObject.NewMap();
+            
+            // Add optional memo field first if present
+            if (token.memo != null && !token.memo.isEmpty()) {
+                tokenObj.Add("d", CBORObject.FromObject(token.memo));
+            }
+            
+            // Add required fields in lexicographical order
+            tokenObj.Add("m", CBORObject.FromObject(token.mint));
+            tokenObj.Add("t", tokenSets);
+            tokenObj.Add("u", CBORObject.FromObject(token.unit));
 
-            return cbor.EncodeToBytes(encodeOptions);
+            return tokenObj.EncodeToBytes(encodeOptions);
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to serialize to CBOR", e);
         }
     }
 
-
-    private CBORObject createOrderedCBORObject(CBORObject tokenSets, Token token) {
-
-        Map<CBORObject, CBORObject> orderedMap = new LinkedHashMap<>();
-
-        if (token.memo != null) {
-            orderedMap.put(CBORObject.FromObject("d"), CBORObject.FromObject(token.memo));
-        }
-
-        orderedMap.put(CBORObject.FromObject("t"), tokenSets);
-        orderedMap.put(CBORObject.FromObject("m"), CBORObject.FromObject(token.mint));
-        orderedMap.put(CBORObject.FromObject("u"), CBORObject.FromObject(token.unit));
-
-        return CBORObject.FromObject(orderedMap);
-    }
-
-    private CBORObject createProofSetItem(String keysetId, List<Proof> proofs) throws IOException {
-        Map<CBORObject, CBORObject> proofSetMap = new LinkedHashMap<>();
-
-        proofSetMap.put(CBORObject.FromObject("i"), CBORObject.FromObject(Hex.decode(keysetId)));
-
-        CBORObject proofsArray = CBORObject.NewArray();
-        for (Proof proof : proofs) {
-            proofsArray.Add(createProofItem(proof));
-        }
-        proofSetMap.put(CBORObject.FromObject("p"), proofsArray);
-
-        return CBORObject.FromObject(proofSetMap);
-    }
-
     private CBORObject createProofItem(Proof proof) throws IOException {
-        Map<CBORObject, CBORObject> proofMap = new LinkedHashMap<>();
+        CBORObject proofMap = CBORObject.NewMap();
 
-        proofMap.put(CBORObject.FromObject("a"), CBORObject.FromObject(proof.amount));
+        // Add proof fields in lexicographical order
+        proofMap.Add("a", CBORObject.FromObject(proof.amount));
+        proofMap.Add("c", CBORObject.FromObject(Hex.decode(proof.c)));
 
-        ObjectMapper mapper = new ObjectMapper();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        mapper.writeValue(baos, proof.secret);
-        byte[] jsonBytes = baos.toByteArray();
+        // Add secret data
+        if (proof.secret != null) {
+            ObjectMapper mapper = new ObjectMapper();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            mapper.writeValue(baos, proof.secret);
+            byte[] jsonBytes = baos.toByteArray();
+            CBORObject secretCbor = CBORObject.FromJSONBytes(jsonBytes);
+            proofMap.Add("s", secretCbor);
+        }
 
-        CBORObject secretCbor = CBORObject.FromJSONBytes(jsonBytes);
-        proofMap.put(CBORObject.FromObject("s"), secretCbor);
-
-        proofMap.put(CBORObject.FromObject("c"), CBORObject.FromObject(proof.c));
-
+        // Add optional DLEQ proof if present
         if (proof.dleq != null) {
-            proofMap.put(CBORObject.FromObject("d"), createDLEQObject(proof.dleq));
+            CBORObject dleqMap = CBORObject.NewMap();
+            dleqMap.Add("e", CBORObject.FromObject(proof.dleq.e.toByteArray()));
+            dleqMap.Add("r", CBORObject.FromObject(proof.dleq.r.toByteArray()));
+            dleqMap.Add("s", CBORObject.FromObject(proof.dleq.s.toByteArray()));
+            proofMap.Add("d", dleqMap);
         }
 
-        if (proof.witness != null) {
-            proofMap.put(CBORObject.FromObject("w"), CBORObject.FromObject(proof.witness));
+        // Add optional witness if present
+        if (proof.witness != null && !proof.witness.isEmpty()) {
+            proofMap.Add("w", CBORObject.FromObject(proof.witness));
         }
 
-        return CBORObject.FromObject(proofMap);
-    }
-
-    private CBORObject createDLEQObject(Object dleq) {
-        Map<CBORObject, CBORObject> dleqMap = new LinkedHashMap<>();
-
-        try {
-            var eField = dleq.getClass().getField("e");
-            var sField = dleq.getClass().getField("s");
-            var rField = dleq.getClass().getField("r");
-
-            dleqMap.put(CBORObject.FromObject("e"), CBORObject.FromObject(((java.math.BigInteger) eField.get(dleq)).toByteArray()));
-            dleqMap.put(CBORObject.FromObject("s"), CBORObject.FromObject(((java.math.BigInteger) sField.get(dleq)).toByteArray()));
-            dleqMap.put(CBORObject.FromObject("r"), CBORObject.FromObject(((java.math.BigInteger) rField.get(dleq)).toByteArray()));
-
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to serialize DLEQ", e);
-        }
-
-        return CBORObject.FromObject(dleqMap);
+        return proofMap;
     }
 }

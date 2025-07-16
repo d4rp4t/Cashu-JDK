@@ -4,29 +4,16 @@ import com.cashujdk.nut00.InnerToken;
 import com.cashujdk.nut00.Proof;
 import com.cashujdk.nut00.Token;
 import com.cashujdk.nut00.ISecret;
-import com.cashujdk.nut00.StringSecret;
 import com.cashujdk.nut12.DLEQProof;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.upokecenter.cbor.CBORObject;
-import org.bouncycastle.math.ec.ECPoint;
-import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec;
-import org.bouncycastle.jce.spec.ECParameterSpec;
-import org.bouncycastle.jce.ECNamedCurveTable;
+import com.upokecenter.cbor.CBORType;
 import org.bouncycastle.util.encoders.Hex;
-import com.cashujdk.cryptography.Cashu;
-
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
 public class CBORDeserializer {
-
-    private final ECParameterSpec CURVE_PARAMS;
-
-    public CBORDeserializer() {
-        ECNamedCurveParameterSpec params = ECNamedCurveTable.getParameterSpec("secp256k1");
-        this.CURVE_PARAMS = params;
-    }
 
     public Token fromCBOR(byte[] cbor) {
         try {
@@ -41,6 +28,10 @@ public class CBORDeserializer {
         Token token = new Token();
         
         // Parse required fields
+        if (!cborObject.ContainsKey("m") || !cborObject.ContainsKey("u") || !cborObject.ContainsKey("t")) {
+            throw new RuntimeException("Missing required token fields");
+        }
+        
         token.mint = cborObject.get("m").AsString();
         token.unit = cborObject.get("u").AsString();
         
@@ -51,20 +42,33 @@ public class CBORDeserializer {
 
         // Parse token sets
         CBORObject tokenSets = cborObject.get("t");
-        token.tokens = new ArrayList<>();
+        if (tokenSets.getType() != CBORType.Array) {
+            throw new RuntimeException("Token sets must be an array");
+        }
 
+        token.tokens = new ArrayList<>();
+        
+        // Process each proof set
         for (CBORObject proofSet : tokenSets.getValues()) {
+            if (!proofSet.ContainsKey("i") || !proofSet.ContainsKey("p")) {
+                throw new RuntimeException("Invalid proof set structure");
+            }
+
             String keysetId = Hex.toHexString(proofSet.get("i").GetByteString());
             CBORObject proofsArray = proofSet.get("p");
             
-            List<Proof> proofs = new ArrayList<>();
-            for (CBORObject proofObj : proofsArray.getValues()) {
-                proofs.add(parseProof(proofObj, keysetId));
+            if (proofsArray.getType() != CBORType.Array) {
+                throw new RuntimeException("Proofs must be an array");
             }
 
-            // Create an InnerToken for each proof
-            for (Proof proof : proofs) {
+            // Create proofs for this keyset
+            for (CBORObject proofObj : proofsArray.getValues()) {
+                Proof proof = parseProof(proofObj);
+                proof.keysetId = keysetId;
+                
+                // Create an InnerToken for each proof
                 InnerToken innerToken = new InnerToken();
+                innerToken.keysetId = keysetId;
                 innerToken.proofs = List.of(proof);
                 token.tokens.add(innerToken);
             }
@@ -73,28 +77,34 @@ public class CBORDeserializer {
         return token;
     }
 
-    private Proof parseProof(CBORObject proofObj, String keysetId) throws Exception {
-        Proof proof = new Proof();
-        proof.keysetId = keysetId;
-        proof.amount = proofObj.get("a").AsNumber().ToInt32Checked();
+    private Proof parseProof(CBORObject proofObj) throws Exception {
+        if (!proofObj.ContainsKey("a") || !proofObj.ContainsKey("c") || !proofObj.ContainsKey("s")) {
+            throw new RuntimeException("Invalid proof structure");
+        }
 
+        Proof proof = new Proof();
+        
+        // Parse required fields
+        proof.amount = proofObj.get("a").AsNumber().ToInt32Checked();
+        proof.c = Hex.toHexString(proofObj.get("c").GetByteString());
+        
         // Parse secret
         CBORObject secretObj = proofObj.get("s");
-        String secretStr = secretObj.ToJSONString();
-        // Using SecretDeserializer indirectly through ObjectMapper
+        String secretJson = secretObj.ToJSONString();
         ObjectMapper mapper = new ObjectMapper();
-        proof.secret = mapper.readValue(secretStr, ISecret.class);
+        proof.secret = mapper.readValue(secretJson, ISecret.class);
 
-        // Parse C point
-        byte[] cBytes = proofObj.get("c").GetByteString();
-        proof.c = Cashu.bytesToHex(cBytes);
-
-        // Parse optional DLEQ
+        // Parse optional DLEQ proof
         if (proofObj.ContainsKey("d")) {
             CBORObject dleqObj = proofObj.get("d");
+            if (!dleqObj.ContainsKey("e") || !dleqObj.ContainsKey("s") || !dleqObj.ContainsKey("r")) {
+                throw new RuntimeException("Invalid DLEQ proof structure");
+            }
+
             BigInteger e = new BigInteger(dleqObj.get("e").GetByteString());
             BigInteger s = new BigInteger(dleqObj.get("s").GetByteString());
             BigInteger r = new BigInteger(dleqObj.get("r").GetByteString());
+            
             proof.dleq = new DLEQProof(s, e, r);
         }
 
