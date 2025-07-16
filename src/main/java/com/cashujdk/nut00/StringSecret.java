@@ -35,14 +35,7 @@ public class StringSecret implements ISecret {
     }
 
     public StringSecret(String secret) {
-        // Allow both hex and regular strings for backwards compatibility
-        try {
-            Hex.decode(secret); // Try parsing as hex to validate
-            this.secret = secret.toLowerCase(); // If successful, store as lowercase hex
-        } catch (Exception e) {
-            // If not valid hex, store as is
-            this.secret = secret;
-        }
+        this.secret = secret;
     }
 
     @Override

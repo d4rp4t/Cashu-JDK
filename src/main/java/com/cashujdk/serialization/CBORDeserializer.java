@@ -12,6 +12,7 @@ import org.bouncycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class CBORDeserializer {
 
@@ -105,7 +106,7 @@ public class CBORDeserializer {
             BigInteger s = new BigInteger(dleqObj.get("s").GetByteString());
             BigInteger r = new BigInteger(dleqObj.get("r").GetByteString());
             
-            proof.dleq = new DLEQProof(s, e, r);
+            proof.dleq = new DLEQProof(s, e, Optional.of(r));
         }
 
         // Parse optional witness

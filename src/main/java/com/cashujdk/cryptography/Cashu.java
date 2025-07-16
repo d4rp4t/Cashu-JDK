@@ -6,7 +6,7 @@ import org.bouncycastle.util.encoders.Hex;
 
 import com.cashujdk.nut00.BlindSignature;
 import com.cashujdk.nut00.Proof;
-import com.cashujdk.nut12.DLEQ;
+import com.cashujdk.nut12.DLEQProof;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -16,6 +16,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Optional;
 
 public class Cashu {
     private static final byte[] DOMAIN_SEPARATOR = "Secp256k1_HashToCurve_Cashu_".getBytes(StandardCharsets.UTF_8);
@@ -85,7 +86,7 @@ public class Cashu {
     /**
      * Computes DLEQ proof (e, s)
       */
-    public static DLEQ computeProof(ECPoint B_, BigInteger a, BigInteger p) {
+    public static DLEQProof computeProof(ECPoint B_, BigInteger a, BigInteger p) {
         //C_ - rK = kY + krG - krG = kY = C
         ECPoint C_ = computeC_(B_, a);
         ECPoint r1 = GENERATOR.multiply(p.mod(CURVE_ORDER));
@@ -95,7 +96,7 @@ public class Cashu {
         BigInteger e = computeE(r1, r2, A, C_);
         BigInteger s = p.add(a.multiply(e)).mod(CURVE_ORDER);
 
-        return new DLEQ(e, s);
+        return new DLEQProof(e, s, Optional.empty());
     }
 
     /**
