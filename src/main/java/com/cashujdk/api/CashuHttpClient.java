@@ -13,6 +13,7 @@ import com.cashujdk.nut09.PostRestoreRequest;
 import com.cashujdk.nut09.PostRestoreResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import okhttp3.*;
 
 import java.io.IOException;
@@ -27,8 +28,18 @@ public class CashuHttpClient  {
 
     public CashuHttpClient(OkHttpClient httpClient, String baseUrl) {
         this.httpClient = httpClient;
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = createObjectMapper();
         this.baseUrl = baseUrl.endsWith("/") ? baseUrl : baseUrl + "/";
+    }
+
+    private static ObjectMapper createObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        
+        // Add any custom serialization modules needed
+        SimpleModule module = new SimpleModule();
+        mapper.registerModule(module);
+        
+        return mapper;
     }
 
     // --- GET Requests ---

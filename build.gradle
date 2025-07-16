@@ -1,31 +1,39 @@
 plugins {
     id 'java'
+    id 'application'
 }
 
-group = 'com.cashujdk'
-version = '1.0-SNAPSHOT'
+group 'com.cashujdk'
+version '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
-    implementation 'org.bitcoinj:bitcoinj-core:0.16.1'
-    implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
-    // https://mvnrepository.com/artifact/com.fasterxml.jackson.dataformat/jackson-dataformat-cbor
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.19.0")
-    implementation("com.upokecenter:cbor:4.5.6")
-    testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
+    implementation 'org.bouncycastle:bcprov-jdk18on:1.76'
+    implementation 'org.json:json:20230227'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.15.2'
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
+    implementation 'org.bitcoinj:bitcoinj-core:0.16.2'
+    implementation 'com.squareup.okhttp3:okhttp:4.10.0'
+    implementation 'com.upokecenter:cbor:4.5.2'
 
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
 }
 
 test {
     useJUnitPlatform()
+    // Add this block to show standard output
+    testLogging {
+        events "passed", "skipped", "failed", "standardOut", "standardError"
+        showStandardStreams = true
+    }
 }
 
-// Task to generate a sources JAR
-java {
-    withSourcesJar()
+application {
+    mainClass = 'com.cashujdk.Main'
 }
