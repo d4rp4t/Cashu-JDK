@@ -29,7 +29,7 @@ public class Token {
         if (proofs == null || proofs.isEmpty()) {
             throw new IllegalArgumentException("Proofs list cannot be null or empty");
         }
-        
+
         String unit = proofs.get(0).keysetId;
         if (unit == null || unit.isEmpty()) {
             throw new IllegalArgumentException("Unit cannot be null or empty");
@@ -53,8 +53,8 @@ public class Token {
     public String encode() throws Exception {
         var serializer = new CBORSerializer();
         byte[] cbor = serializer.toCBOR(this);
-        // We'll use standard Base64 to match the test vector format
-        String base64 = Base64.getEncoder().encodeToString(cbor);
+        // Use URL-safe Base64 encoding without padding
+        String base64 = Base64.getUrlEncoder().withoutPadding().encodeToString(cbor);
         return "cashuB" + base64;
     }
 

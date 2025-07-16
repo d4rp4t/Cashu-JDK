@@ -140,17 +140,17 @@ public class TokenSerializationTest {
         innerToken.proofs = List.of(proof);
         token.tokens = List.of(innerToken);
         
-        // Get standard Base64 token
+        // Get URL-safe Base64 token (default)
         String encodedToken = token.encode();
         
-        // Convert to URL-safe Base64
-        String urlSafeToken = "cashuB" + Base64.getUrlEncoder()
-            .withoutPadding()
-            .encodeToString(Base64.getDecoder().decode(encodedToken.substring(6)));
+        // Convert to standard Base64 (with padding)
+        var serializer = new CBORSerializer();
+        byte[] cbor = serializer.toCBOR(token);
+        String standardToken = "cashuB" + Base64.getEncoder().encodeToString(cbor);
         
         // Both should decode correctly
-        Token standardDecoded = Token.decode(encodedToken);
-        Token urlSafeDecoded = Token.decode(urlSafeToken);
+        Token urlSafeDecoded = Token.decode(encodedToken);
+        Token standardDecoded = Token.decode(standardToken);
         
         // Verify both decode to the same token
         assertEquals(standardDecoded.mint, urlSafeDecoded.mint);
