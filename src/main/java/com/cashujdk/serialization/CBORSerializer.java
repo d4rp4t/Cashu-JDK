@@ -3,6 +3,10 @@ package com.cashujdk.serialization;
 import com.cashujdk.nut00.InnerToken;
 import com.cashujdk.nut00.Proof;
 import com.cashujdk.nut00.Token;
+import com.cashujdk.nut18.Nut10Option;
+import com.cashujdk.nut18.PaymentRequest;
+import com.cashujdk.nut18.Transport;
+import com.cashujdk.nut18.TransportTag;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.upokecenter.cbor.CBORObject;
 import com.upokecenter.cbor.CBOREncodeOptions;
@@ -20,6 +24,8 @@ public class CBORSerializer {
     public CBORSerializer() {
         this.encodeOptions = CBOREncodeOptions.Default;
     }
+
+    // -- Token --
 
     public byte[] toCBOR(Token token) {
         try {
@@ -101,5 +107,66 @@ public class CBORSerializer {
         }
 
         return proofMap;
+    }
+
+    // -- Payment request --
+
+    public byte[] toCBOR(PaymentRequest request) {
+        CBORObject reqObj = CBORObject.NewOrderedMap();
+        request.id.ifPresent(integer -> reqObj.Add("i", CBORObject.FromObject(integer)));
+        request.amount.ifPresent(aLong -> reqObj.Add("a", CBORObject.FromObject(aLong)));
+        request.unit.ifPresent(unit->reqObj.Add("u", CBORObject.FromObject(unit)));
+        request.singleUse.ifPresent(singleUse->reqObj.Add("s", singleUse));
+
+        if (request.mints.isPresent()) {
+            var mints = request.mints.get();
+            CBORObject mintArr = CBORObject.NewArray();
+            for (String mint : mints) {
+                mintArr.Add(CBORObject.FromObject(mint));
+            }
+            reqObj.Add("m", mintArr);
+        }
+        request.description.ifPresent(
+                description -> reqObj.Add("d", CBORObject.FromObject(description))
+        );
+
+        request.transport.ifPresent(transports -> {
+            CBORObject transportsArray = CBORObject.NewArray();
+            for (Transport t : transports) {
+                transportsArray.Add(encodeTransport(t));
+            }
+            reqObj.Add("t", transportsArray);
+        });
+
+       request.nut10Option.ifPresent(option -> reqObj.Add("nut10", encodeNut10Option(option)));
+
+       return reqObj.EncodeToBytes();
+    }
+
+    private CBORObject encodeTransport(Transport transport){
+        CBORObject transportObj = CBORObject.NewOrderedMap();
+        transportObj.Add("t", CBORObject.FromObject(transport.type));
+        transportObj.Add("a", CBORObject.FromObject(transport.target));
+        transport.tags.ifPresent(tags -> transportObj.Add("g", encodeTags(tags)));
+        return transportObj;
+    }
+
+    private CBORObject encodeNut10Option(Nut10Option option){
+        CBORObject optionObj = CBORObject.NewOrderedMap();
+        optionObj.Add("k", option.kind);
+        optionObj.Add("d", option.data);
+        option.tags.ifPresent(tags -> optionObj.Add("t", encodeTags(tags)));
+        return optionObj;
+    }
+
+    private CBORObject encodeTags(TransportTag[] tags){
+        var tagsObj = CBORObject.NewArray();
+        for (TransportTag tag : tags){
+            var a = CBORObject.NewArray();
+            a.Add(CBORObject.FromObject(tag.key));
+            a.Add(CBORObject.FromObject(tag.value));
+            tagsObj.Add(a);
+        }
+        return tagsObj;
     }
 }

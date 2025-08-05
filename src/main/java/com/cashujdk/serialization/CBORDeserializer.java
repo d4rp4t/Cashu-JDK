@@ -5,16 +5,25 @@ import com.cashujdk.nut00.Proof;
 import com.cashujdk.nut00.Token;
 import com.cashujdk.nut00.ISecret;
 import com.cashujdk.nut12.DLEQProof;
+import com.cashujdk.nut18.Nut10Option;
+import com.cashujdk.nut18.PaymentRequest;
+import com.cashujdk.nut18.Transport;
+import com.cashujdk.nut18.TransportTag;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.upokecenter.cbor.CBORObject;
 import com.upokecenter.cbor.CBORType;
 import org.bouncycastle.util.encoders.Hex;
+
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class CBORDeserializer {
+
+    // -- Token --
 
     public Token fromCBOR(byte[] cbor) {
         try {
@@ -116,4 +125,126 @@ public class CBORDeserializer {
 
         return proof;
     }
+
+
+    // -- Payment Request --
+    public PaymentRequest prFromCBOR(byte[] cbor){
+        try {
+            CBORObject cborObject = CBORObject.DecodeFromBytes(cbor);
+            return parsePaymentRequest(cborObject);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to deserialize from CBOR", e);
+        }
+    }
+
+    private PaymentRequest parsePaymentRequest(CBORObject cborObject) throws Exception {
+        PaymentRequest pr = new PaymentRequest();
+
+        if(cborObject.ContainsKey("i")) {
+            pr.id = Optional.of(cborObject.get("i").AsInt32());
+        }
+        if(cborObject.ContainsKey("a")) {
+            pr.amount = Optional.of(cborObject.get("a").AsInt64Value());
+        }
+        if(cborObject.ContainsKey("u")) {
+            pr.unit = Optional.of(cborObject.get("u").AsString());
+        }
+        if(cborObject.ContainsKey("s")) {
+            pr.singleUse = Optional.of(cborObject.get("s").AsBoolean());
+        }
+        if(cborObject.ContainsKey("m")) {
+            pr.mints = Optional.of(
+                    cborObject.get("m").getValues().stream()
+                            .map(CBORObject::AsString).toArray(String[]::new)
+            );
+        }
+        if(cborObject.ContainsKey("d")) {
+            pr.description = Optional.of(cborObject.get("d").AsString());
+        }
+        if(cborObject.ContainsKey("t")) {
+            pr.transport = Optional.of(
+                    decodeTransportArray(cborObject.get("t"))
+            );
+        }
+        if(cborObject.ContainsKey("nut10")) {
+            pr.nut10Option = Optional.of(
+                    decodeNut10Option(cborObject.get("nut10"))
+            );
+        }
+        return pr;
+    }
+
+    private Nut10Option decodeNut10Option(CBORObject optionObj) {
+        Nut10Option option = new Nut10Option();
+
+        if (optionObj.ContainsKey("k")) {
+            option.kind = optionObj.get("k").AsString();
+        }
+
+        if (optionObj.ContainsKey("d")) {
+            option.data = optionObj.get("d").AsString();
+        }
+
+        if (optionObj.ContainsKey("t")) {
+            CBORObject tagsArray = optionObj.get("t");
+            if (tagsArray.getType() == CBORType.Array) {
+                TransportTag[] tags = tagsArray.getValues().stream()
+                        .map(tagArr -> {
+                            TransportTag tag = new TransportTag();
+                            if (tagArr.getType() == CBORType.Array && tagArr.size() >= 2) {
+                                tag.key = tagArr.get(0).AsString();
+                                tag.value = tagArr.get(1).AsString();
+                            }
+                            return tag;
+                        })
+                        .toArray(TransportTag[]::new);
+
+                option.tags = Optional.of(tags);
+            }
+        } else {
+            option.tags = Optional.empty();
+        }
+
+        return option;
+    }
+
+    private Transport[] decodeTransportArray(CBORObject transportsArray) {
+        return transportsArray.getValues().stream()
+                .map(transportObj -> {
+                    Transport transport = new Transport();
+                    for (CBORObject key : transportObj.getKeys()) {
+                        CBORObject val = transportObj.get(key);
+                        switch (key.AsString()) {
+                            case "t":
+                                transport.type = val.AsString();
+                                break;
+                            case "a":
+                                transport.target = val.AsString();
+                                break;
+                            case "g":
+                                transport.tags = Optional.of(val.getValues().stream()
+                                        .map(tagArr -> {
+                                            TransportTag tag = new TransportTag();
+                                            tag.key = tagArr.get(0).AsString();
+                                            tag.value = tagArr.get(1).AsString();
+                                            return tag;
+                                        }).toArray(TransportTag[]::new));
+                                break;
+                        }
+                    }
+                    return transport;
+                }).toArray(Transport[]::new);
+    }
+
+
+    //{
+    //  "i": str <optional>,
+    //  "a": int <optional>,
+    //  "u": str <optional>,
+    //  "s": bool <optional>,
+    //  "m": Array[str] <optional>,
+    //  "d": str <optional>,
+    //  "t": Array[Transport] <optional>,
+    //  "nut10": NUT10Option <optional>,
+    //}
 }
