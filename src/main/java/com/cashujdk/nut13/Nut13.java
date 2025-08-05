@@ -119,7 +119,7 @@ public class Nut13 {
      */
     public static List<String> generateMnemonic() throws Exception {
         SecureRandom random = new SecureRandom();
-        byte[] entropy = new byte[16]; // 128 bits = 12 słów
+        byte[] entropy = new byte[16]; // 128 bits = 12 words
         random.nextBytes(entropy);
 
         return MnemonicCode.INSTANCE.toMnemonic(entropy);

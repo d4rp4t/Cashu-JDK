@@ -37,5 +37,3 @@ public class GetInfoResponse {
     @JsonProperty("nuts")
     public Map<String, Object> nuts;
 }
-
-//todo: add certain nuts settings here
