@@ -113,7 +113,7 @@ public class CBORSerializer {
 
     public byte[] toCBOR(PaymentRequest request) {
         CBORObject reqObj = CBORObject.NewOrderedMap();
-        request.id.ifPresent(integer -> reqObj.Add("i", CBORObject.FromObject(integer)));
+        request.id.ifPresent(string -> reqObj.Add("i", CBORObject.FromObject(string)));
         request.amount.ifPresent(aLong -> reqObj.Add("a", CBORObject.FromObject(aLong)));
         request.unit.ifPresent(unit->reqObj.Add("u", CBORObject.FromObject(unit)));
         request.singleUse.ifPresent(singleUse->reqObj.Add("s", singleUse));

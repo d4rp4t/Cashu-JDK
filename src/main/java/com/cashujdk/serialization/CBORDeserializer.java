@@ -14,12 +14,10 @@ import com.upokecenter.cbor.CBORObject;
 import com.upokecenter.cbor.CBORType;
 import org.bouncycastle.util.encoders.Hex;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class CBORDeserializer {
 
@@ -137,11 +135,11 @@ public class CBORDeserializer {
         }
     }
 
-    private PaymentRequest parsePaymentRequest(CBORObject cborObject) throws Exception {
+    private PaymentRequest parsePaymentRequest(CBORObject cborObject) {
         PaymentRequest pr = new PaymentRequest();
 
         if(cborObject.ContainsKey("i")) {
-            pr.id = Optional.of(cborObject.get("i").AsInt32());
+            pr.id = Optional.of(cborObject.get("i").AsString());
         }
         if(cborObject.ContainsKey("a")) {
             pr.amount = Optional.of(cborObject.get("a").AsInt64Value());
