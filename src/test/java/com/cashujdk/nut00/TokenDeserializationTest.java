@@ -1,8 +1,5 @@
-package com.cashujdk;
+package com.cashujdk.nut00;
 
-import com.cashujdk.nut00.Token;
-import com.cashujdk.nut00.InnerToken;
-import com.cashujdk.nut00.StringSecret;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
