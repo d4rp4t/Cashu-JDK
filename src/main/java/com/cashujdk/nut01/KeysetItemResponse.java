@@ -1,9 +1,11 @@
 package com.cashujdk.nut01;
 
 import java.math.BigInteger;
+import java.util.HexFormat;
 import java.util.Map;
 import java.util.Optional;
 
+import com.cashujdk.nut02.KeysetIdUtil;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class KeysetItemResponse {
@@ -29,5 +31,14 @@ public class KeysetItemResponse {
         this(id, unit, keys, Optional.empty());
     }
 
-    
+    public boolean verifyKeysetId() {
+        HexFormat hex = HexFormat.of();
+        return this.id.contentEquals(KeysetIdUtil.getId(
+                hex.parseHex(this.id.substring(0, 2))[0],
+                this.keys,
+                this.unit,
+                this.finalExpiry
+            )
+        );
+    }
 }

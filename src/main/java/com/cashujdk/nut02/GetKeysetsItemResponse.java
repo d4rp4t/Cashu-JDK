@@ -1,6 +1,8 @@
 package com.cashujdk.nut02;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.HexFormat;
 import java.util.Optional;
 
 public class GetKeysetsItemResponse {
