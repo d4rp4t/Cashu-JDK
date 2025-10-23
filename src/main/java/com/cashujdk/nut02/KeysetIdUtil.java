@@ -72,4 +72,44 @@ public class KeysetIdUtil {
             throw new RuntimeException("SHA-256 unavailable", e);
         }
     }
+
+    public static String mapLongKeysetId(String shortId, List<String> fullKeysetsIds) {
+        if (shortId == null) {
+            throw new RuntimeException("shortId is null");
+        }
+        if (shortId.startsWith("00")) {
+            return shortId;
+        }
+        if (shortId.startsWith("01")) {
+            for (String full : fullKeysetsIds) {
+                if (full != null && full.startsWith(shortId)) {
+                    return full;
+                }
+            }
+            throw new RuntimeException("No matching full keyset id found for shortId: " + shortId);
+        }
+        throw new RuntimeException("Unsupported keyset id prefix for shortId: " + shortId);
+    }
+
+
+    public static String mapShortKeysetId(String fullId) {
+        if (fullId == null) {
+            throw new RuntimeException("fullId is null");
+        }
+        if (fullId.startsWith("00")) {
+            return fullId;
+        }
+        if (fullId.startsWith("01")) {
+            // Return first 8 bytes (16 hex chars) or first 8 characters if not hex;
+            // assuming ID is hex-encoded, so 8 bytes = 16 hex chars.
+            int lengthToKeep = 16;
+            if (fullId.length() < lengthToKeep) {
+                throw new RuntimeException("fullId too short to shorten: " + fullId);
+            }
+            return fullId.substring(0, lengthToKeep);
+        }
+        throw new RuntimeException("Unsupported keyset id prefix for fullId: " + fullId);
+    }
+
+
 }
