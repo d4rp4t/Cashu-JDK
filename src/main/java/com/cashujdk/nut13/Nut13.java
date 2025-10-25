@@ -106,7 +106,7 @@ public class Nut13 {
         } else if (keysetId.substring(0, 2).contentEquals("00")) {
             return deriveBlindingFactorV1(seed, keysetId, counter);
         } else {
-            throw new RuntimeException("Unrecognized keyset ID for blinding factor derivation")
+            throw new RuntimeException("Unrecognized keyset ID for blinding factor derivation");
         }
     }
 
