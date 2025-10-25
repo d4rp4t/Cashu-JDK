@@ -8,13 +8,46 @@ import org.bitcoinj.crypto.MnemonicCode;
 import org.bitcoinj.wallet.DeterministicSeed;
 
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.List;
+import org.bouncycastle.crypto.Mac;
+import org.bouncycastle.crypto.digests.SHA256Digest;
+import org.bouncycastle.crypto.macs.HMac;
+import org.bouncycastle.crypto.params.KeyParameter;
+import java.util.HexFormat;
 
 public class Nut13 {
     public static final String PURPOSE = "129372'";
+    public static final String DOMAIN_SEPARATOR = "Cashu_KDF_HMAC_SHA256";
 
+    /**
+     * @param keyBytes    secret key bytes (required)
+     * @param messageBytes message bytes (may be empty or null treated as zero-length)
+     * @return 32-bytes string (preserves leading zeros)
+     */
+    public static byte[] hmacSha256(byte[] keyBytes, byte[] messageBytes) {
+        if (keyBytes == null) throw new IllegalArgumentException("keyBytes must not be null");
+        if (messageBytes == null) messageBytes = new byte[0];
+
+        // Create HMac(SHA-256)
+        Mac hmac = new HMac(new SHA256Digest());
+
+        // Initialize with raw key bytes
+        hmac.init(new KeyParameter(keyBytes));
+
+        // Process message bytes
+        hmac.update(messageBytes, 0, messageBytes.length);
+
+        // Get output (32 bytes)
+        byte[] out = new byte[hmac.getMacSize()];
+        hmac.doFinal(out, 0);
+
+        // Convert to 64-char hex using java.util.HexFormat
+        return out;
+    }
 
     /**
      * Creates NUT-13 derivation path
@@ -49,7 +82,8 @@ public class Nut13 {
      * Derives blideing factoir from mnemonic
      */
     public static byte[] deriveBlindingFactor(List<String> mnemonic, String keysetId, int counter)
-            throws Exception {
+            throws Exception
+    {
         byte[] seed = deriveSeed(mnemonic);
         return deriveBlindingFactor(seed, keysetId, counter);
     }
@@ -67,6 +101,16 @@ public class Nut13 {
      * Derives blinding factor from seed
      */
     public static byte[] deriveBlindingFactor(byte[] seed, String keysetId, int counter) {
+        if (keysetId.substring(0, 2).contentEquals("01")) {
+            return deriveBlindingFactorV2(seed, keysetId, counter);
+        } else if (keysetId.substring(0, 2).contentEquals("00")) {
+            return deriveBlindingFactorV1(seed, keysetId, counter);
+        } else {
+            throw new RuntimeException("Unrecognized keyset ID for blinding factor derivation");
+        }
+    }
+
+    public static byte[] deriveBlindingFactorV1(byte[] seed, String keysetId, int counter) {
         List<ChildNumber> path = getNut13DerivationPath(keysetId, counter, false);
         DeterministicKey masterKey = HDKeyDerivation.createMasterPrivateKey(seed);
 
@@ -78,10 +122,50 @@ public class Nut13 {
         return derivedKey.getPrivKeyBytes();
     }
 
+    public static byte[] deriveBlindingFactorV2(byte[] seed, String keysetId, int counter) {
+        if (seed == null) throw new IllegalArgumentException("seed must not be null");
+        // Decode hex using java.util.HexFormat
+        byte[] keysetIdBytes = (keysetId == null || keysetId.isEmpty())
+                ? new byte[0]
+                : HexFormat.of().parseHex(keysetId);
+
+        // Build message: b"Cashu_KDF_HMAC_SHA256" || keyset_id_bytes || counter_k_bytes || derivation_type_byte
+        byte[] purpose = DOMAIN_SEPARATOR.getBytes(StandardCharsets.UTF_8);
+
+        // counter encoded as unsigned 64-bit big-endian
+        ByteBuffer bb = ByteBuffer.allocate(8);
+        bb.putLong(((long) counter) & 0xffffffffffffffffL);
+        byte[] counterBytes = bb.array();
+
+        byte derivationType = (byte) 0x01; // blinded messages
+
+        // concatenate
+        int totalLen = purpose.length + keysetIdBytes.length + counterBytes.length + 1;
+        byte[] message = new byte[totalLen];
+        int pos = 0;
+        System.arraycopy(purpose, 0, message, pos, purpose.length); pos += purpose.length;
+        System.arraycopy(keysetIdBytes, 0, message, pos, keysetIdBytes.length); pos += keysetIdBytes.length;
+        System.arraycopy(counterBytes, 0, message, pos, counterBytes.length); pos += counterBytes.length;
+        message[pos] = derivationType;
+
+        // HMAC-SHA256(seed, message)
+        return hmacSha256(seed, message);
+    }
+
     /**
      * Derives secret from seed
      */
     public static StringSecret deriveSecret(byte[] seed, String keysetId, int counter) {
+        if (keysetId.substring(0, 2).contentEquals("01")) {
+            return deriveSecretV2(seed, keysetId, counter);
+        } else if (keysetId.substring(0, 2).contentEquals("00")) {
+            return deriveSecretV1(seed, keysetId, counter);
+        } else {
+            throw new RuntimeException("Unrecognized keyset ID for blinding factor derivation");
+        }
+    }
+
+    public static StringSecret deriveSecretV1(byte[] seed, String keysetId, int counter) {
         List<ChildNumber> path = getNut13DerivationPath(keysetId, counter, true);
         DeterministicKey masterKey = HDKeyDerivation.createMasterPrivateKey(seed);
         DeterministicKey derivedKey = path.stream()
@@ -93,6 +177,36 @@ public class Nut13 {
         String hexString = bytesToHex(privateKeyBytes).toLowerCase();
 
         return new StringSecret(hexString);
+    }
+
+    public static StringSecret deriveSecretV2(byte[] seed, String keysetId, int counter) {
+        if (seed == null) throw new IllegalArgumentException("seed must not be null");
+        // Decode hex using java.util.HexFormat
+        byte[] keysetIdBytes = (keysetId == null || keysetId.isEmpty())
+                ? new byte[0]
+                : HexFormat.of().parseHex(keysetId);
+
+        // Build message: b"Cashu_KDF_HMAC_SHA256" || keyset_id_bytes || counter_k_bytes || derivation_type_byte
+        byte[] purpose = DOMAIN_SEPARATOR.getBytes(StandardCharsets.UTF_8);
+
+        // counter encoded as unsigned 64-bit big-endian
+        ByteBuffer bb = ByteBuffer.allocate(8);
+        bb.putLong(((long) counter) & 0xffffffffffffffffL);
+        byte[] counterBytes = bb.array();
+
+        byte derivationType = (byte) 0x00; // secrets
+
+        // concatenate
+        int totalLen = purpose.length + keysetIdBytes.length + counterBytes.length + 1;
+        byte[] message = new byte[totalLen];
+        int pos = 0;
+        System.arraycopy(purpose, 0, message, pos, purpose.length); pos += purpose.length;
+        System.arraycopy(keysetIdBytes, 0, message, pos, keysetIdBytes.length); pos += keysetIdBytes.length;
+        System.arraycopy(counterBytes, 0, message, pos, counterBytes.length); pos += counterBytes.length;
+        message[pos] = derivationType;
+
+        // HMAC-SHA256(seed, message)
+        return new StringSecret(bytesToHex(hmacSha256(seed, message)).toLowerCase());
     }
 
     /**
