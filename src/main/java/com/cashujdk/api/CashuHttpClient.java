@@ -139,9 +139,25 @@ public class CashuHttpClient  {
                         .post(body)
                         .build();
 
-                try (Response response = httpClient.newCall(request).execute()) {
-                    return handleResponse(response, clazz);
+                IOException lastException = null;
+                for (int attempt = 0; attempt < 3; attempt++) {
+                    try {
+                        try (Response response = httpClient.newCall(request).execute()) {
+                            return handleResponse(response, clazz);
+                        }
+                    } catch (IOException e) {
+                        lastException = e;
+                        if (attempt < 2) {  // Don't sleep on the last attempt
+                            try {
+                                Thread.sleep(1000 * (attempt + 1));  // Exponential backoff: 1s, 2s
+                            } catch (InterruptedException ie) {
+                                Thread.currentThread().interrupt();
+                                throw new RuntimeException("Interrupted during retry delay", ie);
+                            }
+                        }
+                    }
                 }
+                throw new RuntimeException("Failed after 3 attempts", lastException);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
