@@ -32,7 +32,7 @@ public class CBORSerializer {
             // Create a map of proofs grouped by keyset ID
             Map<String, List<Proof>> groupedProofs = new LinkedHashMap<>();
             for (InnerToken entry : token.tokens) {
-                for (Proof proof : entry.proofs) {
+                for (Proof proof : entry.getProofsShortId()) {
                     groupedProofs.computeIfAbsent(proof.keysetId, k -> new ArrayList<>()).add(proof);
                 }
             }

@@ -103,8 +103,8 @@ public class KeysetIdUtil {
             // Return first 8 bytes (16 hex chars) or first 8 characters if not hex;
             // assuming ID is hex-encoded, so 8 bytes = 16 hex chars.
             int lengthToKeep = 16;
-            if (fullId.length() < lengthToKeep) {
-                throw new RuntimeException("fullId too short to shorten: " + fullId);
+            if (fullId.length() <= lengthToKeep) {
+                return fullId;
             }
             return fullId.substring(0, lengthToKeep);
         }

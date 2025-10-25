@@ -23,8 +23,8 @@ public class TokenDeserializationTest {
         if (token.tokens != null) {
             token.tokens.forEach(innerToken -> {
                 System.out.println("Inner Token:");
-                if (innerToken.proofs != null) {
-                    innerToken.proofs.forEach(proof -> {
+                if (innerToken.getProofsShortId() != null) {
+                    innerToken.getProofsShortId().forEach(proof -> {
                         System.out.println("  Amount: " + proof.amount);
                         if (proof.secret instanceof StringSecret) {
                             System.out.println("  Secret (hex): " + ((StringSecret)proof.secret).getSecret());
@@ -34,7 +34,7 @@ public class TokenDeserializationTest {
                         }
                         System.out.println("  C: " + proof.c);
                         if (proof.keysetId != null) {
-                            System.out.println("  Keyset ID: " + proof.keysetId);
+                            System.out.println("  Short Keyset ID: " + proof.keysetId);
                         }
                         System.out.println("  ---");
                     });

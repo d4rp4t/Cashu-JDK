@@ -32,4 +32,8 @@ public class InnerToken {
         })
         .collect(Collectors.toList());
     }
+    
+    public List<Proof> getProofsShortId() {
+        return this.proofs;
+    }
 }

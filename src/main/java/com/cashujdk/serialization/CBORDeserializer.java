@@ -75,9 +75,7 @@ public class CBORDeserializer {
                 proof.keysetId = keysetId;
                 
                 // Create an InnerToken for each proof
-                InnerToken innerToken = new InnerToken();
-                innerToken.keysetId = keysetId;
-                innerToken.proofs = List.of(proof);
+                InnerToken innerToken = new InnerToken(keysetId, List.of(proof));
                 token.tokens.add(innerToken);
             }
         }
