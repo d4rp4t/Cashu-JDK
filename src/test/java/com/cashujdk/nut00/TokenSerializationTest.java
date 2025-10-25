@@ -1,12 +1,9 @@
 package com.cashujdk.nut00;
 
 import com.cashujdk.serialization.CBORSerializer;
-import com.cashujdk.serialization.CBORDeserializer;
-import com.cashujdk.nut12.DLEQProof;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
