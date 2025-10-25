@@ -130,7 +130,7 @@ public class Nut13 {
                 : HexFormat.of().parseHex(keysetId);
 
         // Build message: b"Cashu_KDF_HMAC_SHA256" || keyset_id_bytes || counter_k_bytes || derivation_type_byte
-        byte[] purpose = "Cashu_KDF_HMAC_SHA256".getBytes(StandardCharsets.UTF_8);
+        byte[] purpose = DOMAIN_SEPARATOR.getBytes(StandardCharsets.UTF_8);
 
         // counter encoded as unsigned 64-bit big-endian
         ByteBuffer bb = ByteBuffer.allocate(8);
@@ -187,7 +187,7 @@ public class Nut13 {
                 : HexFormat.of().parseHex(keysetId);
 
         // Build message: b"Cashu_KDF_HMAC_SHA256" || keyset_id_bytes || counter_k_bytes || derivation_type_byte
-        byte[] purpose = "Cashu_KDF_HMAC_SHA256".getBytes(StandardCharsets.UTF_8);
+        byte[] purpose = DOMAIN_SEPARATOR.getBytes(StandardCharsets.UTF_8);
 
         // counter encoded as unsigned 64-bit big-endian
         ByteBuffer bb = ByteBuffer.allocate(8);
