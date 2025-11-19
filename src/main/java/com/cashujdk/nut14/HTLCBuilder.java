@@ -8,24 +8,36 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class HTLCBuilder extends P2PkBuilder {
-    private ECPoint hashLock;
+    private String hashLock;
 
-    public ECPoint getHashLock() {
+    /*
+     * ugly hack to reuse P2PkBuilder for HTLCs.
+     * P2PkBuilder expects a pubkey in `data` field, but we need to store a hashlock instead
+     *
+     * we inject a dummy pubkey so the loader doesn’t break, then remove it after load/build.
+     */
+    private final static String dummy = "020000000000000000000000000000000000000000000000000000000000000001";
+
+    public String getHashLock() {
         return hashLock;
     }
 
-    public void setHashLock(ECPoint hashLock) {
+    public void setHashLock(String hashLock) {
         this.hashLock = hashLock;
     }
 
     public static HTLCBuilder load(HTLCProofSecret proofSecret) {
-        ECPoint hashLock = Cashu.hexToPoint(proofSecret.getData());
-        P2PkBuilder innerBuilder = P2PkBuilder.load(new P2PKProofSecret(proofSecret.getNonce(), proofSecret.getData(), proofSecret.getTags()));
+        String hashLock = proofSecret.getData();
+        P2PKProofSecret tempProofSecret = new P2PKProofSecret(proofSecret.getNonce(), dummy, proofSecret.getTags());
+        P2PkBuilder innerBuilder = P2PkBuilder.load(tempProofSecret);
+
         List<ECPoint> filteredPubkeys = innerBuilder.getPubkeys().stream()
-                .filter(pk -> !pk.equals(hashLock))
+                .filter(pk -> !pk.equals(Cashu.hexToPoint(dummy)))
                 .collect(Collectors.toList());
+
         innerBuilder.setPubkeys(filteredPubkeys);
         HTLCBuilder builder = new HTLCBuilder();
+
         builder.setHashLock(hashLock);
         builder.setLockTime(innerBuilder.getLockTime());
         builder.setPubkeys(innerBuilder.getPubkeys());
@@ -37,6 +49,9 @@ public class HTLCBuilder extends P2PkBuilder {
     }
 
     public HTLCProofSecret build() {
+        if(hashLock.length() != 64) {
+            throw new IllegalArgumentException("hashLock length must be 64");
+        }
         P2PkBuilder innerBuilder = new P2PkBuilder();
         innerBuilder.setLockTime(getLockTime());
         innerBuilder.setPubkeys(getPubkeys());
@@ -44,11 +59,12 @@ public class HTLCBuilder extends P2PkBuilder {
         innerBuilder.setSignatureThreshold(getSignatureThreshold());
         innerBuilder.setSigFlag(getSigFlag());
         innerBuilder.setNonce(getNonce());
+
         List<ECPoint> pubkeysWithHashLock = innerBuilder.getPubkeys();
-        pubkeysWithHashLock.add(0, hashLock);
+        pubkeysWithHashLock.addFirst(Cashu.hexToPoint(dummy));
         innerBuilder.setPubkeys(pubkeysWithHashLock);
         P2PKProofSecret p2pkProof = innerBuilder.build();
 
-        return new HTLCProofSecret(p2pkProof.getNonce(), Cashu.pointToHex(hashLock, true), p2pkProof.getTags());
+        return new HTLCProofSecret(p2pkProof.getNonce(), hashLock, p2pkProof.getTags());
     }
 }
