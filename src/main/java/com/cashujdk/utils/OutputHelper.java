@@ -23,7 +23,7 @@ public class OutputHelper {
             byte[] r = randomPrivKey();
 
             ECPoint Y = Cashu.hashToCurve(secret.getBytes());
-            var B_ = Cashu.computeB_(Y, new BigInteger(r));
+            var B_ = Cashu.computeB_(Y, new BigInteger(1, r));
 
             var bm = new BlindedMessage();
             bm.amount = amount;
@@ -49,7 +49,7 @@ public class OutputHelper {
             byte[] r = Nut13.deriveBlindingFactor(mnemonic, keysetId.get_id(), counter);
 
             ECPoint Y = Cashu.hashToCurve(secret.getBytes());
-            var B_ = Cashu.computeB_(Y, new BigInteger(r));
+            var B_ = Cashu.computeB_(Y, new BigInteger(1, r));
 
             var bm = new BlindedMessage();
             bm.amount = amount;
