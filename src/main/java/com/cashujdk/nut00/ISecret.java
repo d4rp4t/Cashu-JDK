@@ -11,5 +11,5 @@ import org.bouncycastle.math.ec.ECPoint;
 @JsonDeserialize(using = SecretDeserializer.class)
 public interface ISecret {
     byte[] getBytes();
-    ECPoint toCurve();
+    ECPoint hashToCurve();
 }
