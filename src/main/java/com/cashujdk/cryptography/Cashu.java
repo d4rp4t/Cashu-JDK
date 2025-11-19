@@ -20,11 +20,6 @@ import java.util.Optional;
 
 public class Cashu {
     private static final byte[] DOMAIN_SEPARATOR = "Secp256k1_HashToCurve_Cashu_".getBytes(StandardCharsets.UTF_8);
-    private static final SecP256K1Curve CURVE = new SecP256K1Curve();
-    private static final ECPoint GENERATOR = ECC.DOMAIN.getG();
-    private static final BigInteger CURVE_ORDER = CURVE.getOrder();
-
-
 
     /**
      * Converts a message string to a curve point using hash-to-curve
@@ -53,7 +48,7 @@ public class Cashu {
             byte[] publicKeyBytes = concat(new byte[]{0x02}, sha256(concat(msgHash, counterBytes)));
 
             try {
-                return CURVE.decodePoint(publicKeyBytes);
+                return Secp256k1.CURVE.decodePoint(publicKeyBytes);
             } catch (Exception e) {
                 // Continue to next counter if point is invalid
             }
@@ -65,14 +60,14 @@ public class Cashu {
      * Converts a scalar (BigInteger) to a curve point by multiplying with generator
      */
     public static ECPoint scalarToPoint(BigInteger scalar) {
-        return GENERATOR.multiply(scalar.mod(CURVE_ORDER));
+        return Secp256k1.GENERATOR.multiply(scalar.mod(Secp256k1.CURVE_ORDER));
     }
 
     /**
      * Computes B_ = Y + rG
      */
     public static ECPoint computeB_(ECPoint Y, BigInteger r) {
-        ECPoint rG = GENERATOR.multiply(r.mod(CURVE_ORDER));
+        ECPoint rG = Secp256k1.GENERATOR.multiply(r.mod(Secp256k1.CURVE_ORDER));
         return Y.add(rG);
     }
 
@@ -80,7 +75,7 @@ public class Cashu {
      * Computes C_ = kB_
      */
     public static ECPoint computeC_(ECPoint B_, BigInteger k) {
-        return B_.multiply(k.mod(CURVE_ORDER));
+        return B_.multiply(k.mod(Secp256k1.CURVE_ORDER));
     }
 
     /**
@@ -89,12 +84,12 @@ public class Cashu {
     public static DLEQProof computeProof(ECPoint B_, BigInteger a, BigInteger p) {
         //C_ - rK = kY + krG - krG = kY = C
         ECPoint C_ = computeC_(B_, a);
-        ECPoint r1 = GENERATOR.multiply(p.mod(CURVE_ORDER));
-        ECPoint r2 = B_.multiply(p.mod(CURVE_ORDER));
-        ECPoint A = GENERATOR.multiply(a.mod(CURVE_ORDER));
+        ECPoint r1 = Secp256k1.GENERATOR.multiply(p.mod(Secp256k1.CURVE_ORDER));
+        ECPoint r2 = B_.multiply(p.mod(Secp256k1.CURVE_ORDER));
+        ECPoint A = Secp256k1.GENERATOR.multiply(a.mod(Secp256k1.CURVE_ORDER));
 
         BigInteger e = computeE(r1, r2, A, C_);
-        BigInteger s = p.add(a.multiply(e)).mod(CURVE_ORDER);
+        BigInteger s = p.add(a.multiply(e)).mod(Secp256k1.CURVE_ORDER);
 
         return new DLEQProof(e, s, Optional.empty());
     }
@@ -107,14 +102,14 @@ public class Cashu {
                 pointToHex(K, false) + pointToHex(C_, false);
         byte[] eBytes = concatenated.getBytes(StandardCharsets.UTF_8);
         byte[] hash = sha256(eBytes);
-        return new BigInteger(1, hash).mod(CURVE_ORDER);
+        return new BigInteger(1, hash).mod(Secp256k1.CURVE_ORDER);
     }
 
     /**
      *  Verifies a proof
      */
     public static boolean verify(Proof proof, ECPoint A) {
-        ECPoint Y = proof.secret.toCurve();
+        ECPoint Y = proof.secret.hashToCurve();
         return verifyProof(Y, proof.dleq.r, hexToPoint(proof.c), proof.dleq.e, proof.dleq.s, A);
     }
 
@@ -129,12 +124,12 @@ public class Cashu {
      * Verifies DLEQ proof for blinded signature
      */
     public static boolean verifyProof(ECPoint B_, ECPoint C_, BigInteger e, BigInteger s, ECPoint A) {
-        ECPoint sG = GENERATOR.multiply(s.mod(CURVE_ORDER));
-        ECPoint eA = A.multiply(e.mod(CURVE_ORDER));
+        ECPoint sG = Secp256k1.GENERATOR.multiply(s.mod(Secp256k1.CURVE_ORDER));
+        ECPoint eA = A.multiply(e.mod(Secp256k1.CURVE_ORDER));
         ECPoint r1 = sG.subtract(eA);
 
-        ECPoint sB_ = B_.multiply(s.mod(CURVE_ORDER));
-        ECPoint eC_ = C_.multiply(e.mod(CURVE_ORDER));
+        ECPoint sB_ = B_.multiply(s.mod(Secp256k1.CURVE_ORDER));
+        ECPoint eC_ = C_.multiply(e.mod(Secp256k1.CURVE_ORDER));
         ECPoint r2 = sB_.subtract(eC_);
 
         BigInteger e_ = computeE(r1, r2, A, C_);
@@ -145,9 +140,9 @@ public class Cashu {
      * Verifies DLEQ proof for unblinded signature
      */
     public static boolean verifyProof(ECPoint Y, BigInteger r, ECPoint C, BigInteger e, BigInteger s, ECPoint A) {
-        ECPoint rA = A.multiply(r.mod(CURVE_ORDER));
+        ECPoint rA = A.multiply(r.mod(Secp256k1.CURVE_ORDER));
         ECPoint C_ = C.add(rA);
-        ECPoint rG = GENERATOR.multiply(r.mod(CURVE_ORDER));
+        ECPoint rG = Secp256k1.GENERATOR.multiply(r.mod(Secp256k1.CURVE_ORDER));
         ECPoint B_ = Y.add(rG);
 
         return verifyProof(B_, C_, e, s, A);
@@ -157,7 +152,7 @@ public class Cashu {
      * Computes C = C_ - rA (unblinding)
      */
     public static ECPoint computeC(ECPoint C_, BigInteger r, ECPoint A) {
-        ECPoint rA = A.multiply(r.mod(CURVE_ORDER));
+        ECPoint rA = A.multiply(r.mod(Secp256k1.CURVE_ORDER));
         return C_.subtract(rA);
     }
 
@@ -171,7 +166,7 @@ public class Cashu {
             byte[] bytes = new byte[32];
             random.nextBytes(bytes);
             scalar = new BigInteger(1, bytes);
-        } while (scalar.equals(BigInteger.ZERO) || scalar.compareTo(CURVE_ORDER) >= 0);
+        } while (scalar.equals(BigInteger.ZERO) || scalar.compareTo(Secp256k1.CURVE_ORDER) >= 0);
         return scalar;
     }
 
@@ -233,7 +228,7 @@ public class Cashu {
 
     public static ECPoint hexToPoint(String hex) {
         byte[] bytes = Hex.decode(hex);
-        return CURVE.decodePoint(bytes);
+        return Secp256k1.CURVE.decodePoint(bytes);
     }
 
     public static BigInteger hexToScalar(String hex) {
@@ -242,7 +237,7 @@ public class Cashu {
     }
 
     public static ECPoint bytesToPoint(byte[] bytes) {
-        return CURVE.decodePoint(bytes);
+        return Secp256k1.CURVE.decodePoint(bytes);
     }
 
     public static byte[] hexToBytes(String hex) {

@@ -15,17 +15,11 @@ public class StringSecret implements ISecret {
     }
 
     public byte[] getBytes() {
-        try {
-            // First try decoding as hex
-            return Hex.decode(secret);
-        } catch (Exception e) {
-            // If not hex, treat as regular string (for backwards compatibility)
-            return secret.getBytes();
-        }
+        return secret.getBytes();
     }
 
-    public ECPoint toCurve() {
-        return Cashu.hashToCurve(getBytes());
+    public ECPoint hashToCurve() {
+        return Cashu.messageToCurve(secret);
     }
 
     public static StringSecret random() {

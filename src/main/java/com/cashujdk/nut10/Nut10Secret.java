@@ -3,15 +3,18 @@ package com.cashujdk.nut10;
 import com.cashujdk.cryptography.Cashu;
 import com.cashujdk.nut00.ISecret;
 import com.cashujdk.serialization.Nut10SecretDeserializer;
+import com.cashujdk.serialization.Nut10SecretSerializer;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.bouncycastle.math.ec.ECPoint;
 import java.nio.charset.StandardCharsets;
 
 @JsonDeserialize(using = Nut10SecretDeserializer.class)
+@JsonSerialize(using = Nut10SecretSerializer.class)
 public class Nut10Secret implements ISecret {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -32,7 +35,6 @@ public class Nut10Secret implements ISecret {
     }
 
 
-
     public byte[] getBytes() {
         if (originalString != null) {
             return originalString.getBytes(StandardCharsets.UTF_8);
@@ -44,7 +46,7 @@ public class Nut10Secret implements ISecret {
         }
     }
 
-    public ECPoint toCurve() {
+    public ECPoint hashToCurve() {
         return Cashu.hashToCurve(getBytes());
     }
 }

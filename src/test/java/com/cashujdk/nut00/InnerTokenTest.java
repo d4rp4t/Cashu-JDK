@@ -28,7 +28,7 @@ public class InnerTokenTest {
         }
         
         @Override
-        public ECPoint toCurve() {
+        public ECPoint hashToCurve() {
             return null; // Not needed for this test
         }
     }

@@ -1,17 +1,20 @@
 package com.cashujdk.utils;
 
 import com.cashujdk.cryptography.Cashu;
-import com.cashujdk.nut00.BlindedMessage;
-import com.cashujdk.nut00.ISecret;
-import com.cashujdk.nut00.StringSecret;
+import com.cashujdk.nut00.*;
 import com.cashujdk.nut01.Keyset;
 import com.cashujdk.nut01.KeysetId;
+import com.cashujdk.nut01.KeysetItemResponse;
+import com.cashujdk.nut03.PostSwapResponse;
+import com.cashujdk.nut12.DLEQProof;
 import com.cashujdk.nut13.Nut13;
 import org.bouncycastle.math.ec.ECPoint;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class OutputHelper {
     public List<OutputData> createOutputs(long[] amounts, KeysetId keysetId){
@@ -22,8 +25,8 @@ public class OutputHelper {
             ISecret secret = randomSecret();
             byte[] r = randomPrivKey();
 
-            ECPoint Y = Cashu.hashToCurve(secret.getBytes());
-            var B_ = Cashu.computeB_(Y, new BigInteger(r));
+            ECPoint Y = secret.hashToCurve();
+            var B_ = Cashu.computeB_(Y, new BigInteger(1, r));
 
             var bm = new BlindedMessage();
             bm.amount = amount;
@@ -49,7 +52,7 @@ public class OutputHelper {
             byte[] r = Nut13.deriveBlindingFactor(mnemonic, keysetId.get_id(), counter);
 
             ECPoint Y = Cashu.hashToCurve(secret.getBytes());
-            var B_ = Cashu.computeB_(Y, new BigInteger(r));
+            var B_ = Cashu.computeB_(Y, new BigInteger(1, r));
 
             var bm = new BlindedMessage();
             bm.amount = amount;
@@ -91,6 +94,39 @@ public class OutputHelper {
         }
 
         return outputAmounts;
+    }
+
+    public static List<Proof> constructAndVerifyProofs(
+            PostSwapResponse response,
+            KeysetItemResponse keyset,
+            List<ISecret> secrets,
+            List<BigInteger> blindingFactors,
+            Consumer<String> callback) throws Exception {
+        List<Proof> result = new ArrayList<>();
+        for (int i = 0; i < blindingFactors.size(); ++i) {
+            BlindSignature signature = response.signatures.get(i);
+            BigInteger blindingFactor = blindingFactors.get(i);
+            ISecret secret = secrets.get(i);
+
+            ECPoint key = Cashu.hexToPoint(keyset.keys.get(BigInteger.valueOf(signature.amount)));
+            ECPoint C = Cashu.computeC(Cashu.hexToPoint(signature.c_), blindingFactor, key);
+            if(!Cashu.verifyProof(secret.hashToCurve(), blindingFactor, C, signature.dleq.e, signature.dleq.s, key)){
+                callback.accept(signature.c_);
+            }
+            result.add(
+                    new Proof(
+                            signature.amount,
+                            signature.keysetId,
+                            secret,
+                            Cashu.pointToHex(C, true),
+                            Optional.empty(),
+                            Optional.of(
+                                    new DLEQProof(signature.dleq.s, signature.dleq.e, Optional.of(signature.dleq.r))
+                            )
+                    )
+            );
+        }
+        return result;
     }
 
     public static byte[] randomPrivKey() {
