@@ -14,6 +14,7 @@ import org.bouncycastle.util.encoders.Hex;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.*;
 
 
@@ -95,9 +96,9 @@ public class CBORSerializer {
         // Add optional DLEQ proof if present
         if (proof.dleq != null) {
             CBORObject dleqMap = CBORObject.NewMap();
-            dleqMap.Add("e", CBORObject.FromObject(proof.dleq.e.toByteArray()));
-            dleqMap.Add("r", CBORObject.FromObject(proof.dleq.r.toByteArray()));
-            dleqMap.Add("s", CBORObject.FromObject(proof.dleq.s.toByteArray()));
+            dleqMap.Add("e", CBORObject.FromObject(bigIntegerTo32Bytes(proof.dleq.e)));
+            dleqMap.Add("r", CBORObject.FromObject(bigIntegerTo32Bytes(proof.dleq.r)));
+            dleqMap.Add("s", CBORObject.FromObject(bigIntegerTo32Bytes(proof.dleq.s)));
             proofMap.Add("d", dleqMap);
         }
 
@@ -168,5 +169,23 @@ public class CBORSerializer {
             tagsObj.Add(a);
         }
         return tagsObj;
+    }
+
+    private byte[] bigIntegerTo32Bytes(BigInteger value) {
+        byte[] bytes = value.toByteArray();
+
+        if (bytes.length == 32) {
+            return bytes;
+        } else if (bytes.length < 32) {
+            byte[] padded = new byte[32];
+            System.arraycopy(bytes, 0, padded, 32 - bytes.length, bytes.length);
+            return padded;
+        } else if (bytes.length == 33 && bytes[0] == 0) {
+            byte[] trimmed = new byte[32];
+            System.arraycopy(bytes, 1, trimmed, 0, 32);
+            return trimmed;
+        } else {
+            throw new IllegalArgumentException("BigInteger too large for 32 bytes");
+        }
     }
 }
