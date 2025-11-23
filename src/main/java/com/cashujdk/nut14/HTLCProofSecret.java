@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -72,8 +73,8 @@ public class HTLCProofSecret extends P2PKProofSecret {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(preimage.getBytes(StandardCharsets.UTF_8));
-
-            return getBuilder().getHashLock().getEncoded(true).equals(hash);
+            byte[] expected = com.cashujdk.cryptography.Cashu.hexToBytes(getBuilder().getHashLock());
+            return Arrays.equals(expected, hash);
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("SHA-256 not available", e);
         }
