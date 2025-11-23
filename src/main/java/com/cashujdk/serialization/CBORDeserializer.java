@@ -107,9 +107,9 @@ public class CBORDeserializer {
                 throw new RuntimeException("Invalid DLEQ proof structure");
             }
 
-            BigInteger e = new BigInteger(dleqObj.get("e").GetByteString());
-            BigInteger s = new BigInteger(dleqObj.get("s").GetByteString());
-            BigInteger r = new BigInteger(dleqObj.get("r").GetByteString());
+            BigInteger e = new BigInteger(1, dleqObj.get("e").GetByteString());
+            BigInteger s = new BigInteger(1, dleqObj.get("s").GetByteString());
+            BigInteger r = new BigInteger(1, dleqObj.get("r").GetByteString());
             
             proof.dleq = new DLEQProof(s, e, Optional.of(r));
         }
