@@ -60,8 +60,11 @@ public class HTLCBuilder extends P2PkBuilder {
         innerBuilder.setSigFlag(getSigFlag());
         innerBuilder.setNonce(getNonce());
 
-        List<ECPoint> pubkeysWithHashLock = innerBuilder.getPubkeys();
-        pubkeysWithHashLock.addFirst(Cashu.hexToPoint(dummy));
+        List<ECPoint> pubkeysWithHashLock = new java.util.ArrayList<>();
+        pubkeysWithHashLock.add(Cashu.hexToPoint(dummy));
+        if (innerBuilder.getPubkeys() != null) {
+            pubkeysWithHashLock.addAll(innerBuilder.getPubkeys());
+        }
         innerBuilder.setPubkeys(pubkeysWithHashLock);
         P2PKProofSecret p2pkProof = innerBuilder.build();
 
