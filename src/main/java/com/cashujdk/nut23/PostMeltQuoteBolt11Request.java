@@ -6,7 +6,7 @@ public class PostMeltQuoteBolt11Request extends PostMeltQuoteRequest {
     //todo: change type
     public String options;
 
-    PostMeltQuoteBolt11Request(String request, String unit, String options) {
+    public PostMeltQuoteBolt11Request(String request, String unit, String options) {
         super(request, unit);
         this.options = options;
     }

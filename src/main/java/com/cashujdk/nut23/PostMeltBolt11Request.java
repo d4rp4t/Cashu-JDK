@@ -11,7 +11,7 @@ public class PostMeltBolt11Request extends PostMeltRequest {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public List<BlindedMessage> outputs;
 
-    PostMeltBolt11Request(
+    public PostMeltBolt11Request(
         String quote,
         List<Proof> inputs,
         List<BlindedMessage> outputs
