@@ -19,11 +19,12 @@ public class Token {
 
     /**
      * Creates a Token from a list of Proofs.
-     * All proofs must be from the same mint (have the same keysetId)
+     * All proofs must use the same unit, but they may belong to different keysets.
      *
      * @param proofs List of proofs to create the token from
      * @param unit The unit for the token (e.g., "sat" or "BTC")
-     * @throws IllegalArgumentException if proofs are from different mints
+     * @param mintUrl The mint URL associated with these proofs
+     * @throws IllegalArgumentException if proofs list or unit is invalid
      */
     public Token(List<Proof> proofs, String unit, String mintUrl) {
         if (proofs == null || proofs.isEmpty()) {
@@ -34,17 +35,19 @@ public class Token {
             throw new IllegalArgumentException("Unit cannot be null or empty");
         }
 
-        // Group proofs by keysetId
+        // Create inner tokens grouped by keysetId so that proofs from
+        // different keysets are preserved in separate groups. All of them
+        // still share the same mint and unit.
         var groupedProofs = proofs.stream()
             .collect(Collectors.groupingBy(p -> p.keysetId));
 
-        if (groupedProofs.size() > 1) {
-            throw new IllegalArgumentException("All proofs must be from the same mint (same keysetId)");
+        this.tokens = new ArrayList<>();
+        for (var entry : groupedProofs.entrySet()) {
+            String keysetId = entry.getKey();
+            List<Proof> keysetProofs = entry.getValue();
+            this.tokens.add(new InnerToken(keysetId, keysetProofs));
         }
 
-        String keysetId = proofs.get(0).keysetId;
-        this.tokens = new ArrayList<>();
-        this.tokens.add(new InnerToken(keysetId, proofs));
         this.unit = unit;
         this.mint = mintUrl;
     }
